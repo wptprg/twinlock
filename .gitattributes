@@ -1,0 +1,9 @@
+# Identical bytes on every platform, so the published SHA-256 of twinlock.html
+# matches what anyone gets from a clone, on Windows, macOS or Linux.
+* text=auto eol=lf
+*.html text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
