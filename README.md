@@ -139,8 +139,12 @@ with a browser, now and in ten years, and can be audited by anyone.
 
 Twinlock is free and will stay free. If it helps you, you can support its maintenance:
 
-* GitHub Sponsors: *coming soon*
-* Bitcoin: *coming soon*
+* Bitcoin (BTC): `14Udp9aA1woSDCQhcwKVDLricHRkr8yvy8`
+* Ethereum (ETH): `0xEd9BC7282a522879569dd7c670054ac8684a62Af`
+
+The same addresses, with QR codes, are on the [website](https://wptprg.github.io/twinlock/#apoiar).
+Before sending, compare the address shown there with the one here: donation addresses are a
+classic target for tampering.
 
 ## Security
 

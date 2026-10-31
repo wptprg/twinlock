@@ -149,7 +149,21 @@
   <div class="wrap">
     <h2 data-i18n="apoioTitulo"></h2>
     <p class="lead" data-i18n="apoioLead"></p>
-    <p style="color:var(--texto-2)" data-i18n="apoioBreve"></p>
+    <div class="doacoes">
+      <div class="doacao">
+        <h3>Bitcoin (BTC)</h3>
+        <img src="img/btc.svg" alt="QR code: Bitcoin address" width="160" height="160">
+        <code data-endereco="btc"></code>
+        <button type="button" class="btn copiar" data-copiar="btc" data-i18n="apoioCopiar"></button>
+      </div>
+      <div class="doacao">
+        <h3>Ethereum (ETH)</h3>
+        <img src="img/eth.svg" alt="QR code: Ethereum address" width="160" height="160">
+        <code data-endereco="eth"></code>
+        <button type="button" class="btn copiar" data-copiar="eth" data-i18n="apoioCopiar"></button>
+      </div>
+    </div>
+    <div class="aviso" data-i18n="apoioAviso"></div>
   </div>
 </section>
 

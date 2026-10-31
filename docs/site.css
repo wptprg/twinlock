@@ -142,3 +142,11 @@ footer a { color: var(--texto-2); }
   .passo:nth-of-type(even) .texto { order: 0; }
   section { padding: 40px 0; }
 }
+
+/* donations */
+.doacoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; max-width: 760px; }
+.doacao { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.doacao h3 { margin: 0; font-size: 18px; }
+.doacao img { width: 160px; height: 160px; background: #fff; padding: 8px; border-radius: 10px; border: 1px solid var(--borda); }
+.doacao code { font-size: 12px; word-break: break-all; background: var(--fundo); border: 1px solid var(--borda); padding: 8px 10px; border-radius: 8px; user-select: all; }
+.doacao .copiar { padding: 8px 14px; font-size: 14px; }

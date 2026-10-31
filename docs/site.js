@@ -4,6 +4,11 @@ const VERSAO = '1.0.0';
 const HASH = '0b436277ed61c4b2d9181bafc4f91b5e595a83468ebb89ced5ec35b848ee4b0d';
 const REPO = 'https://github.com/wptprg/twinlock';
 const DOWNLOAD = REPO + '/releases/download/v' + VERSAO + '/twinlock.html';
+// Donation addresses. The same values are in README.md and README.pt-BR.md; compare before sending.
+const ENDERECOS = {
+  btc: '14Udp9aA1woSDCQhcwKVDLricHRkr8yvy8',
+  eth: '0xEd9BC7282a522879569dd7c670054ac8684a62Af'
+};
 
 const T = {
   en: {
@@ -50,7 +55,7 @@ const T = {
     q4: 'Does it work on my phone?', a4: 'It opens in mobile browsers in manual mode (load and download files). The folder mode needs Chrome or Edge on a computer. Touch and hold reveals a word.',
     q5: 'Why not an app?', a5: 'An app has to be installed, updated and trusted. A single HTML file runs on any computer with a browser, today and in ten years, and anyone can audit it.',
     q6: 'Who is behind this?', a6: 'An independent developer who wanted a safer place than paper for his own words and decided to publish the result as free software under the MIT license. There is no company, no account, no telemetry.',
-    apoioTitulo: 'Support the project', apoioLead: 'Twinlock is free and will stay free. If it helps you, you can support its maintenance.', apoioBreve: 'Donation links coming soon.',
+    apoioTitulo: 'Support the project', apoioLead: 'Twinlock is free and will stay free. If it helps you, you can support its maintenance.', apoioCopiar: 'Copy address', apoioCopiado: 'Copied', apoioAviso: 'Before sending, compare the address with the one in the README on GitHub. Donation addresses are a classic target for tampering: the two must be identical.',
     rodLic: 'MIT License · © 2026 Waldir P Thomaz', rodTut: 'Tutorial', rodSeg: 'Security policy', rodSpec: 'File format', rodVersao: 'Version ' + VERSAO,
     /* tutorial */
     tTitulo: 'Twinlock, step by step', tLead: 'Ten minutes from download to your first encrypted wallet. Screenshots are from version ' + VERSAO + '.',
@@ -119,7 +124,7 @@ const T = {
     q4: 'Funciona no celular?', a4: 'Abre em navegadores de celular no modo manual (carregar e baixar arquivos). O modo pasta precisa do Chrome ou Edge no computador. Tocar e segurar revela uma palavra.',
     q5: 'Por que não um aplicativo?', a5: 'Aplicativo precisa ser instalado, atualizado e confiado. Um único arquivo HTML roda em qualquer computador com navegador, hoje e daqui a dez anos, e qualquer pessoa pode auditá-lo.',
     q6: 'Quem está por trás disso?', a6: 'Um desenvolvedor independente que queria um lugar mais seguro que o papel para as próprias palavras e decidiu publicar o resultado como software livre, sob licença MIT. Não há empresa, nem cadastro, nem telemetria.',
-    apoioTitulo: 'Apoie o projeto', apoioLead: 'O Twinlock é gratuito e vai continuar gratuito. Se ele ajuda você, dá para apoiar a manutenção.', apoioBreve: 'Links de doação em breve.',
+    apoioTitulo: 'Apoie o projeto', apoioLead: 'O Twinlock é gratuito e vai continuar gratuito. Se ele ajuda você, dá para apoiar a manutenção.', apoioCopiar: 'Copiar endereço', apoioCopiado: 'Copiado', apoioAviso: 'Antes de enviar, compare o endereço com o que está no README no GitHub. Endereço de doação é alvo clássico de adulteração: os dois precisam ser idênticos.',
     rodLic: 'Licença MIT · © 2026 Waldir P Thomaz', rodTut: 'Tutorial', rodSeg: 'Política de segurança', rodSpec: 'Formato do arquivo', rodVersao: 'Versão ' + VERSAO,
     tTitulo: 'Twinlock, passo a passo', tLead: 'Dez minutos do download à primeira carteira cifrada. As telas são da versão ' + VERSAO + '.',
     t1T: '1. Baixe e confira', t1P: 'Pegue o twinlock.html na página oficial de releases. Antes de abrir, calcule o SHA-256 e compare com o valor publicado na release. Os comandos abaixo mostram o hash do arquivo na pasta atual.',
@@ -187,7 +192,7 @@ const T = {
     q4: '¿Funciona en el móvil?', a4: 'Se abre en navegadores móviles en modo manual (cargar y descargar archivos). El modo carpeta necesita Chrome o Edge en una computadora. Tocar y mantener revela una palabra.',
     q5: '¿Por qué no una app?', a5: 'Una app hay que instalarla, actualizarla y confiar en ella. Un único archivo HTML corre en cualquier computadora con navegador, hoy y dentro de diez años, y cualquiera puede auditarlo.',
     q6: '¿Quién está detrás?', a6: 'Un desarrollador independiente que quería un lugar más seguro que el papel para sus propias palabras y decidió publicar el resultado como software libre, bajo licencia MIT. No hay empresa, ni registro, ni telemetría.',
-    apoioTitulo: 'Apoya el proyecto', apoioLead: 'Twinlock es gratuito y seguirá siéndolo. Si te ayuda, puedes apoyar su mantenimiento.', apoioBreve: 'Enlaces de donación próximamente.',
+    apoioTitulo: 'Apoya el proyecto', apoioLead: 'Twinlock es gratuito y seguirá siéndolo. Si te ayuda, puedes apoyar su mantenimiento.', apoioCopiar: 'Copiar dirección', apoioCopiado: 'Copiado', apoioAviso: 'Antes de enviar, compara la dirección con la que está en el README en GitHub. Las direcciones de donación son un blanco clásico de manipulación: las dos deben ser idénticas.',
     rodLic: 'Licencia MIT · © 2026 Waldir P Thomaz', rodTut: 'Tutorial', rodSeg: 'Política de seguridad', rodSpec: 'Formato del archivo', rodVersao: 'Versión ' + VERSAO,
     tTitulo: 'Twinlock, paso a paso', tLead: 'Diez minutos desde la descarga hasta tu primera billetera cifrada. Las capturas son de la versión ' + VERSAO + '.',
     t1T: '1. Descarga y verifica', t1P: 'Obtén twinlock.html en la página oficial de releases. Antes de abrirlo, calcula su SHA-256 y compáralo con el valor publicado en la release. Los comandos de abajo muestran el hash del archivo en la carpeta actual.',
@@ -233,6 +238,7 @@ function aplicar() {
   document.querySelectorAll('[data-hash]').forEach(el => { el.textContent = HASH; });
   document.querySelectorAll('[data-download]').forEach(a => { a.href = DOWNLOAD; });
   document.querySelectorAll('[data-repo]').forEach(a => { a.href = REPO + (a.dataset.repo || ''); });
+  document.querySelectorAll('[data-endereco]').forEach(el => { el.textContent = ENDERECOS[el.dataset.endereco] || ''; });
   document.querySelectorAll('select.idioma').forEach(s => { s.value = idioma; });
   const titulos = { en: 'Twinlock — your recovery phrase, encrypted', 'pt-BR': 'Twinlock — sua frase de recuperação, cifrada', es: 'Twinlock — tu frase de recuperación, cifrada' };
   if (document.body.dataset.pagina === 'index') document.title = titulos[idioma];
@@ -244,5 +250,17 @@ document.addEventListener('DOMContentLoaded', () => {
     idioma = e.target.value;
     try { localStorage.setItem('twinlock.site.idioma', idioma); } catch { /* optional */ }
     aplicar();
+  }));
+  document.querySelectorAll('[data-copiar]').forEach(b => b.addEventListener('click', async () => {
+    const valor = ENDERECOS[b.dataset.copiar];
+    try {
+      await navigator.clipboard.writeText(valor);
+      b.textContent = t('apoioCopiado');
+      setTimeout(() => { b.textContent = t('apoioCopiar'); }, 1500);
+    } catch {
+      // Clipboard unavailable (older browser, insecure context): select the text so the user can copy it.
+      const code = b.parentElement.querySelector('code');
+      const sel = window.getSelection(); const r = document.createRange(); r.selectNodeContents(code); sel.removeAllRanges(); sel.addRange(r);
+    }
   }));
 });
