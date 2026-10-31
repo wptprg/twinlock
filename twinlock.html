@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Twinlock — your recovery phrase, encrypted. One file, two keys, no internet.
+  Single-file, dependency-free, offline. The Content-Security-Policy below blocks ALL network access:
+  nothing you type can leave this page. See SPEC.md for the file format and tools/ for a standalone recovery script.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Twinlock</title>
+<style>
+  :root {
+    --fundo: #f3f4f6;
+    --superficie: #ffffff;
+    --borda: #d6d9df;
+    --texto: #1b1f27;
+    --texto-2: #5b6372;
+    --primaria: #1f5fbf;
+    --primaria-texto: #ffffff;
+    --perigo: #b42318;
+    --perigo-fundo: #fef3f2;
+    --ok: #157347;
+    --ok-fundo: #ecfdf3;
+    --aviso: #9a6700;
+    --aviso-fundo: #fff8e1;
+    --sombra: 0 1px 3px rgba(0,0,0,.08), 0 4px 14px rgba(0,0,0,.06);
+    --raio: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fundo: #0f1218;
+      --superficie: #181c25;
+      --borda: #2b313d;
+      --texto: #e7eaf0;
+      --texto-2: #9aa3b2;
+      --primaria: #5b96f0;
+      --primaria-texto: #0b1220;
+      --perigo: #f28b82;
+      --perigo-fundo: #2a1716;
+      --ok: #6fcf97;
+      --ok-fundo: #142a1e;
+      --aviso: #f2c14e;
+      --aviso-fundo: #2b2410;
+      --sombra: 0 1px 3px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .95em; }
+
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--borda); background: var(--superficie); }
+  header h1 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  header h1 small { font-weight: 400; color: var(--texto-2); font-size: 13px; }
+  .acoes-topo { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--borda); font-size: 13px; color: var(--texto-2); max-width: 320px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .chip.ok { border-color: var(--ok); color: var(--ok); background: var(--ok-fundo); }
+  select.idioma { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--borda); background: var(--superficie); font-size: 13px; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--borda); background: var(--superficie); cursor: pointer; transition: filter .15s, transform .05s; }
+  .btn:hover { filter: brightness(.96); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.primario { background: var(--primaria); border-color: var(--primaria); color: var(--primaria-texto); font-weight: 600; }
+  .btn.perigo { color: var(--perigo); border-color: var(--perigo); background: var(--perigo-fundo); }
+  .btn.pequeno { padding: 6px 10px; font-size: 14px; }
+  .btn.link { border: none; background: none; color: var(--primaria); padding: 4px 6px; text-decoration: underline; }
+
+  .painel { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 20px; box-shadow: var(--sombra); }
+  .painel h2 { margin: 0 0 8px; font-size: 18px; }
+  .painel p { margin: 6px 0; color: var(--texto-2); }
+  .aviso { border-left: 4px solid var(--aviso); background: var(--aviso-fundo); padding: 12px 14px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
+  .aviso ul { margin: 6px 0 0 18px; padding: 0; }
+  .erro-box { border-left: 4px solid var(--perigo); background: var(--perigo-fundo); color: var(--perigo); padding: 10px 12px; border-radius: 8px; margin: 10px 0; font-size: 14px; }
+
+  .grade-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; margin-top: 20px; }
+  .card { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 18px; min-height: 130px; cursor: pointer; box-shadow: var(--sombra); display: flex; flex-direction: column; justify-content: space-between; transition: transform .12s, border-color .12s; text-align: left; }
+  .card:hover { transform: translateY(-2px); border-color: var(--primaria); }
+  .card:focus-visible { outline: 3px solid var(--primaria); outline-offset: 2px; }
+  .card .titulo { font-size: 18px; font-weight: 600; display: flex; gap: 8px; align-items: center; word-break: break-word; }
+  .card .titulo.cifrada { color: var(--texto-2); font-style: italic; font-weight: 500; }
+  .card .meta { color: var(--texto-2); font-size: 13px; margin-top: 10px; }
+  .card.nova { border-style: dashed; align-items: center; justify-content: center; color: var(--primaria); font-weight: 600; font-size: 17px; }
+  .card.nova .mais { font-size: 34px; line-height: 1; }
+
+  dialog { border: none; border-radius: 16px; padding: 0; width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--superficie); color: var(--texto); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  dialog::backdrop { background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
+  .dlg-cabecalho { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--borda); }
+  .dlg-cabecalho h2 { margin: 0; font-size: 19px; }
+  .dlg-corpo { padding: 20px 22px; overflow: auto; max-height: calc(100vh - 190px); }
+  .dlg-rodape { display: flex; justify-content: space-between; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--borda); flex-wrap: wrap; }
+  .dlg-rodape .direita { display: flex; gap: 10px; margin-left: auto; }
+
+  .passos { display: flex; gap: 6px; margin-bottom: 18px; font-size: 13px; color: var(--texto-2); flex-wrap: wrap; }
+  .passos span { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--borda); }
+  .passos span.ativo { background: var(--primaria); color: var(--primaria-texto); border-color: var(--primaria); font-weight: 600; }
+  .passos span.feito { border-color: var(--ok); color: var(--ok); }
+
+  .campo { margin-bottom: 16px; }
+  .campo label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  .campo .dica { font-size: 13px; color: var(--texto-2); margin-top: 4px; }
+  .campo.caixa label { display: flex; gap: 8px; align-items: flex-start; font-weight: 500; cursor: pointer; }
+  .campo.caixa input { margin-top: 3px; }
+  .entrada { display: flex; align-items: stretch; border: 1px solid var(--borda); border-radius: 10px; background: var(--fundo); overflow: hidden; }
+  .entrada:focus-within { border-color: var(--primaria); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primaria) 20%, transparent); }
+  .entrada input { flex: 1; border: none; background: transparent; padding: 11px 12px; min-width: 0; outline: none; font-size: 16px; }
+  .entrada .olho { border: none; background: transparent; padding: 0 12px; cursor: pointer; color: var(--texto-2); }
+  .entrada .olho:hover { color: var(--texto); }
+  .contador { font-size: 12px; color: var(--texto-2); text-align: right; }
+  .regras { list-style: none; padding: 0; margin: 6px 0 0; font-size: 13px; display: grid; gap: 2px; }
+  .regras li::before { content: "○ "; color: var(--texto-2); }
+  .regras li.ok { color: var(--ok); }
+  .regras li.ok::before { content: "✔ "; }
+  .forca { height: 6px; border-radius: 3px; background: var(--borda); margin-top: 8px; overflow: hidden; }
+  .forca i { display: block; height: 100%; width: 0; transition: width .2s, background .2s; }
+  .forca-rotulo { font-size: 12px; color: var(--texto-2); margin-top: 4px; }
+  .duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .duas-colunas { grid-template-columns: 1fr; } }
+  .combinado { font-size: 13px; color: var(--texto-2); margin: -4px 0 14px; }
+  .combinado.ok { color: var(--ok); }
+
+  .seletor-qtd { display: inline-flex; border: 1px solid var(--borda); border-radius: 10px; overflow: hidden; }
+  .seletor-qtd label { padding: 8px 16px; cursor: pointer; border-right: 1px solid var(--borda); }
+  .seletor-qtd label:last-child { border-right: none; }
+  .seletor-qtd input { display: none; }
+  .seletor-qtd input:checked + span { font-weight: 700; color: var(--primaria); }
+  .seletor-qtd label:has(input:checked) { background: color-mix(in srgb, var(--primaria) 12%, transparent); }
+
+  .grade-palavras { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+  .palavra { display: flex; align-items: center; border: 1px solid var(--borda); border-radius: 10px; background: var(--fundo); overflow: hidden; }
+  .palavra b { width: 34px; text-align: center; font-size: 12px; color: var(--texto-2); border-right: 1px solid var(--borda); align-self: stretch; display: flex; align-items: center; justify-content: center; }
+  .palavra input { flex: 1; min-width: 0; border: none; background: transparent; padding: 9px 10px; outline: none; font-family: ui-monospace, Consolas, monospace; font-size: 15px; }
+  .palavra.ok { border-color: var(--ok); }
+  .palavra.erro { border-color: var(--perigo); background: var(--perigo-fundo); }
+  .palavra:focus-within { border-color: var(--primaria); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primaria) 20%, transparent); }
+  .palavra .texto { flex: 1; padding: 9px 10px; font-family: ui-monospace, Consolas, monospace; font-size: 15px; user-select: text; }
+  .grade-palavras.oculta .texto { filter: blur(7px); user-select: none; transition: filter .12s; }
+  .grade-palavras.oculta .palavra { cursor: pointer; touch-action: manipulation; -webkit-touch-callout: none; }
+  .grade-palavras.oculta .palavra:hover .texto,
+  .grade-palavras.oculta .palavra:focus-visible .texto,
+  .grade-palavras.oculta .palavra.revelada .texto { filter: none; user-select: text; }
+  .grade-palavras.oculta .palavra:focus-visible { outline: 2px solid var(--primaria); outline-offset: 1px; }
+  .status-palavras { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 14px; color: var(--texto-2); flex-wrap: wrap; gap: 8px; }
+
+  .resumo dt { font-weight: 600; font-size: 13px; color: var(--texto-2); margin-top: 10px; }
+  .resumo dd { margin: 2px 0 0; font-size: 16px; }
+
+  .barra-trava { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--texto-2); }
+  .barra-trava b { font-variant-numeric: tabular-nums; color: var(--texto); }
+
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--texto); color: var(--fundo); padding: 12px 18px; border-radius: 10px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: calc(100vw - 32px); font-size: 14px; z-index: 50; }
+  #toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.erro { background: var(--perigo); color: #fff; }
+
+  .spinner { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: gira .7s linear infinite; display: inline-block; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  footer { text-align: center; color: var(--texto-2); font-size: 12px; margin-top: 40px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔐 Twinlock <small data-i18n="slogan"></small></h1>
+  <div class="acoes-topo">
+    <select id="selIdioma" class="idioma" aria-label="Language">
+      <option value="en">English</option>
+      <option value="pt-BR">Português</option>
+      <option value="es">Español</option>
+    </select>
+    <span id="chipPasta" class="chip"></span>
+    <button id="btnAbrirPasta" class="btn pequeno"></button>
+    <button id="btnRecarregar" class="btn pequeno" hidden>↻</button>
+  </div>
+</header>
+
+<main>
+  <section id="painelIncompativel" class="painel" hidden>
+    <h2 data-i18n="incompativelTitulo"></h2>
+    <p data-i18n="incompativelTexto"></p>
+  </section>
+
+  <section id="painelInicio" class="painel">
+    <h2 data-i18n="inicioTitulo"></h2>
+    <p data-i18n="inicioTexto"></p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+      <button id="btnEscolherPasta" class="btn primario" data-i18n="escolherPasta"></button>
+      <button id="btnReabrirPasta" class="btn" hidden></button>
+      <button id="btnModoManual" class="btn link" data-i18n="linkManual"></button>
+    </div>
+    <div id="painelManual" hidden style="margin-top:14px;">
+      <p data-i18n="manualTexto"></p>
+      <input id="inputArquivos" type="file" accept=".json,application/json" multiple>
+    </div>
+    <div class="aviso">
+      <strong data-i18n="leiaAntes"></strong>
+      <ul>
+        <li data-i18n="aviso1"></li>
+        <li data-i18n="aviso2"></li>
+        <li data-i18n="aviso3"></li>
+        <li data-i18n="aviso4"></li>
+        <li data-i18n="aviso5"></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="secaoCarteiras" hidden>
+    <div class="grade-cards" id="gradeCards"></div>
+  </section>
+
+  <footer id="rodape">
+    <span id="rodapeVersao"></span><br>
+    <span id="autoteste"></span>
+  </footer>
+</main>
+
+<!-- ============ NEW WALLET ============ -->
+<dialog id="dlgNova">
+  <div class="dlg-cabecalho">
+    <h2 data-i18n="novaCarteira"></h2>
+    <button class="btn pequeno" data-fechar="dlgNova" data-i18n-title="cancelar">✕</button>
+  </div>
+  <div class="dlg-corpo">
+    <div class="passos">
+      <span data-passo="1" class="ativo" data-i18n="passo1"></span>
+      <span data-passo="2" data-i18n="passo2"></span>
+      <span data-passo="3" data-i18n="passo3"></span>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="passo1">
+      <div class="campo">
+        <label for="descricao" data-i18n="descricao"></label>
+        <div class="entrada"><input id="descricao" maxlength="20" autocomplete="off" spellcheck="false" data-i18n-placeholder="descricaoPlaceholder"></div>
+        <div class="contador"><span id="contDescricao">0</span>/20</div>
+      </div>
+      <div class="campo caixa">
+        <label><input type="checkbox" id="cifrarDescricao"><span data-i18n="cifrarDescricao"></span></label>
+        <div class="dica" data-i18n="cifrarDescricaoDica"></div>
+      </div>
+
+      <div class="duas-colunas">
+        <div>
+          <div class="campo">
+            <label for="acesso" data-i18n="chaveAcesso"></label>
+            <div class="entrada"><input id="acesso" type="password" autocomplete="new-password" spellcheck="false"><button type="button" class="olho" data-olho="acesso">👁</button></div>
+            <div class="forca"><i id="forcaAcesso"></i></div>
+            <div class="forca-rotulo" id="rotuloForcaAcesso">&nbsp;</div>
+            <ul class="regras" id="regrasAcesso">
+              <li data-regra="tam" data-i18n="regraTamAcesso"></li>
+            </ul>
+          </div>
+          <div class="campo">
+            <label for="acesso2" data-i18n="repitaAcesso"></label>
+            <div class="entrada"><input id="acesso2" type="password" autocomplete="new-password" spellcheck="false"><button type="button" class="olho" data-olho="acesso2">👁</button></div>
+            <ul class="regras"><li id="regraAcessoIgual" data-i18n="regraIgual"></li></ul>
+          </div>
+        </div>
+        <div>
+          <div class="campo">
+            <label for="cripto" data-i18n="chaveCripto"></label>
+            <div class="entrada"><input id="cripto" type="password" autocomplete="new-password" spellcheck="false"><button type="button" class="olho" data-olho="cripto">👁</button></div>
+            <div class="forca"><i id="forcaCripto"></i></div>
+            <div class="forca-rotulo" id="rotuloForcaCripto">&nbsp;</div>
+            <ul class="regras" id="regrasCripto">
+              <li data-regra="tam" data-i18n="regraTamCripto"></li>
+              <li data-regra="mix" data-i18n="regraMix"></li>
+              <li data-regra="dif" data-i18n="regraDif"></li>
+            </ul>
+          </div>
+          <div class="campo">
+            <label for="cripto2" data-i18n="repitaCripto"></label>
+            <div class="entrada"><input id="cripto2" type="password" autocomplete="new-password" spellcheck="false"><button type="button" class="olho" data-olho="cripto2">👁</button></div>
+            <ul class="regras"><li id="regraCriptoIgual" data-i18n="regraIgual"></li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="combinado" id="combinado"></div>
+      <div class="aviso" data-i18n="avisoChaves"></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="passo2" hidden>
+      <div class="campo">
+        <label data-i18n="qtdPalavras"></label>
+        <div class="seletor-qtd" id="seletorQtd">
+          <label><input type="radio" name="qtd" value="12"><span>12</span></label>
+          <label><input type="radio" name="qtd" value="18"><span>18</span></label>
+          <label><input type="radio" name="qtd" value="24" checked><span>24</span></label>
+        </div>
+        <div class="dica" data-i18n="dicaPalavras"></div>
+      </div>
+      <div class="grade-palavras" id="gradeEntrada"></div>
+      <div class="status-palavras">
+        <span id="contValidas"></span>
+        <span id="msgChecksum"></span>
+      </div>
+      <datalist id="listaBip39"></datalist>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="passo3" hidden>
+      <dl class="resumo">
+        <dt data-i18n="descricao"></dt><dd id="resDescricao"></dd>
+        <dt data-i18n="passo2"></dt><dd id="resQtd"></dd>
+      </dl>
+      <div class="grade-palavras" id="gradeConferencia"></div>
+      <div class="aviso" style="margin-top:16px;" data-i18n="avisoConferir"></div>
+      <div id="erroSalvar" class="erro-box" hidden></div>
+    </div>
+  </div>
+  <div class="dlg-rodape">
+    <button id="btnVoltar" class="btn" hidden data-i18n="voltar"></button>
+    <div class="direita">
+      <button class="btn" data-fechar="dlgNova" data-i18n="cancelar"></button>
+      <button id="btnContinuar" class="btn primario" disabled data-i18n="continuar"></button>
+      <button id="btnSalvar" class="btn primario" hidden data-i18n="salvar"></button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ============ OPEN WALLET ============ -->
+<dialog id="dlgAbrir">
+  <div class="dlg-cabecalho">
+    <h2 id="abrirTitulo"></h2>
+    <button class="btn pequeno" data-fechar="dlgAbrir" data-i18n-title="fechar">✕</button>
+  </div>
+  <div class="dlg-corpo">
+    <div id="abrirChaves">
+      <p id="abrirInfo" style="margin-top:0;color:var(--texto-2)"></p>
+      <div class="duas-colunas">
+        <div class="campo">
+          <label for="abrirAcesso" data-i18n="chaveAcesso"></label>
+          <div class="entrada"><input id="abrirAcesso" type="password" autocomplete="off" spellcheck="false"><button type="button" class="olho" data-olho="abrirAcesso">👁</button></div>
+        </div>
+        <div class="campo">
+          <label for="abrirCripto" data-i18n="chaveCripto"></label>
+          <div class="entrada"><input id="abrirCripto" type="password" autocomplete="off" spellcheck="false"><button type="button" class="olho" data-olho="abrirCripto">👁</button></div>
+        </div>
+      </div>
+      <div id="erroAbrir" class="erro-box" hidden></div>
+    </div>
+
+    <div id="abrirPalavras" hidden>
+      <div class="status-palavras" style="margin-top:0">
+        <span id="abrirQtd"></span>
+        <span class="barra-trava"><span data-i18n="travaEm"></span> <b id="contagemTrava">2:00</b></span>
+      </div>
+      <div class="grade-palavras oculta" id="gradeAberta"></div>
+      <div class="aviso" style="margin-top:16px;" data-i18n="avisoAberta"></div>
+    </div>
+  </div>
+  <div class="dlg-rodape">
+    <button id="btnExcluir" class="btn perigo" hidden data-i18n="excluir"></button>
+    <div class="direita">
+      <button id="btnRevelar" class="btn" hidden></button>
+      <button class="btn" data-fechar="dlgAbrir" data-i18n="fechar"></button>
+      <button id="btnDesbloquear" class="btn primario" data-i18n="abrir"></button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+// ==== LOGICA ====
+// Pure logic, no DOM: cryptography and BIP39. Testable in Node by extracting this block. Documented in SPEC.md.
+const VERSAO = '1.0.0';
+const URL_OFICIAL = 'https://github.com/wptprg/twinlock';
+const FORMATO = 'twinlock/1';
+const FORMATOS_ACEITOS = ['twinlock/1', 'cofre/1'];   // cofre/1: pre-release format, same layout
+const ITERACOES = 1000000;         // PBKDF2-SHA256 iterations for new files
+const MIN_ACESSO = 8;
+const MIN_CRIPTO = 12;
+const MAX_DESCRICAO = 20;
+const COMBINADO_RECOMENDADO = 20;  // recommended combined key length for files kept online
+const QUANTIDADES = [12, 18, 24];
+const BIP39 = "abandon ability able about above absent absorb abstract absurd abuse access accident account accuse achieve acid acoustic acquire across act action actor actress actual adapt add addict address adjust admit adult advance advice aerobic affair afford afraid again age agent agree ahead aim air airport aisle alarm album alcohol alert alien all alley allow almost alone alpha already also alter always amateur amazing among amount amused analyst anchor ancient anger angle angry animal ankle announce annual another answer antenna antique anxiety any apart apology appear apple approve april arch arctic area arena argue arm armed armor army around arrange arrest arrive arrow art artefact artist artwork ask aspect assault asset assist assume asthma athlete atom attack attend attitude attract auction audit august aunt author auto autumn average avocado avoid awake aware away awesome awful awkward axis baby bachelor bacon badge bag balance balcony ball bamboo banana banner bar barely bargain barrel base basic basket battle beach bean beauty because become beef before begin behave behind believe below belt bench benefit best betray better between beyond bicycle bid bike bind biology bird birth bitter black blade blame blanket blast bleak bless blind blood blossom blouse blue blur blush board boat body boil bomb bone bonus book boost border boring borrow boss bottom bounce box boy bracket brain brand brass brave bread breeze brick bridge brief bright bring brisk broccoli broken bronze broom brother brown brush bubble buddy budget buffalo build bulb bulk bullet bundle bunker burden burger burst bus business busy butter buyer buzz cabbage cabin cable cactus cage cake call calm camera camp can canal cancel candy cannon canoe canvas canyon capable capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle caught cause caution cave ceiling celery cement census century cereal certain chair chalk champion change chaos chapter charge chase chat cheap check cheese chef cherry chest chicken chief child chimney choice choose chronic chuckle chunk churn cigar cinnamon circle citizen city civil claim clap clarify claw clay clean clerk clever click client cliff climb clinic clip clock clog close cloth cloud clown club clump cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct confirm congress connect consider control convince cook cool copper copy coral core corn correct cost cotton couch country couple course cousin cover coyote crack cradle craft cram crane crash crater crawl crazy cream credit creek crew cricket crime crisp critic crop cross crouch crowd crucial cruel cruise crumble crunch crush cry crystal cube culture cup cupboard curious current curtain curve cushion custom cute cycle dad damage damp dance danger daring dash daughter dawn day deal debate debris decade december decide decline decorate decrease deer defense define defy degree delay deliver demand demise denial dentist deny depart depend deposit depth deputy derive describe desert design desk despair destroy detail detect develop device devote diagram dial diamond diary dice diesel diet differ digital dignity dilemma dinner dinosaur direct dirt disagree discover disease dish dismiss disorder display distance divert divide divorce dizzy doctor document dog doll dolphin domain donate donkey donor door dose double dove draft dragon drama drastic draw dream dress drift drill drink drip drive drop drum dry duck dumb dune during dust dutch duty dwarf dynamic eager eagle early earn earth easily east easy echo ecology economy edge edit educate effort egg eight either elbow elder electric elegant element elephant elevator elite else embark embody embrace emerge emotion employ empower empty enable enact end endless endorse enemy energy enforce engage engine enhance enjoy enlist enough enrich enroll ensure enter entire entry envelope episode equal equip era erase erode erosion error erupt escape essay essence estate eternal ethics evidence evil evoke evolve exact example excess exchange excite exclude excuse execute exercise exhaust exhibit exile exist exit exotic expand expect expire explain expose express extend extra eye eyebrow fabric face faculty fade faint faith fall false fame family famous fan fancy fantasy farm fashion fat fatal father fatigue fault favorite feature february federal fee feed feel female fence festival fetch fever few fiber fiction field figure file film filter final find fine finger finish fire firm first fiscal fish fit fitness fix flag flame flash flat flavor flee flight flip float flock floor flower fluid flush fly foam focus fog foil fold follow food foot force forest forget fork fortune forum forward fossil foster found fox fragile frame frequent fresh friend fringe frog front frost frown frozen fruit fuel fun funny furnace fury future gadget gain galaxy gallery game gap garage garbage garden garlic garment gas gasp gate gather gauge gaze general genius genre gentle genuine gesture ghost giant gift giggle ginger giraffe girl give glad glance glare glass glide glimpse globe gloom glory glove glow glue goat goddess gold good goose gorilla gospel gossip govern gown grab grace grain grant grape grass gravity great green grid grief grit grocery group grow grunt guard guess guide guilt guitar gun gym habit hair half hammer hamster hand happy harbor hard harsh harvest hat have hawk hazard head health heart heavy hedgehog height hello helmet help hen hero hidden high hill hint hip hire history hobby hockey hold hole holiday hollow home honey hood hope horn horror horse hospital host hotel hour hover hub huge human humble humor hundred hungry hunt hurdle hurry hurt husband hybrid ice icon idea identify idle ignore ill illegal illness image imitate immense immune impact impose improve impulse inch include income increase index indicate indoor industry infant inflict inform inhale inherit initial inject injury inmate inner innocent input inquiry insane insect inside inspire install intact interest into invest invite involve iron island isolate issue item ivory jacket jaguar jar jazz jealous jeans jelly jewel job join joke journey joy judge juice jump jungle junior junk just kangaroo keen keep ketchup key kick kid kidney kind kingdom kiss kit kitchen kite kitten kiwi knee knife knock know lab label labor ladder lady lake lamp language laptop large later latin laugh laundry lava law lawn lawsuit layer lazy leader leaf learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely long loop lottery loud lounge love loyal lucky luggage lumber lunar lunch luxury lyrics machine mad magic magnet maid mail main major make mammal man manage mandate mango mansion manual maple marble march margin marine market marriage mask mass master match material math matrix matter maximum maze meadow mean measure meat mechanic medal media melody melt member memory mention menu mercy merge merit merry mesh message metal method middle midnight milk million mimic mind minimum minor minute miracle mirror misery miss mistake mix mixed mixture mobile model modify mom moment monitor monkey monster month moon moral more morning mosquito mother motion motor mountain mouse move movie much muffin mule multiply muscle museum mushroom music must mutual myself mystery myth naive name napkin narrow nasty nation nature near neck need negative neglect neither nephew nerve nest net network neutral never news next nice night noble noise nominee noodle normal north nose notable note nothing notice novel now nuclear number nurse nut oak obey object oblige obscure observe obtain obvious occur ocean october odor off offer office often oil okay old olive olympic omit once one onion online only open opera opinion oppose option orange orbit orchard order ordinary organ orient original orphan ostrich other outdoor outer output outside oval oven over own owner oxygen oyster ozone pact paddle page pair palace palm panda panel panic panther paper parade parent park parrot party pass patch path patient patrol pattern pause pave payment peace peanut pear peasant pelican pen penalty pencil people pepper perfect permit person pet phone photo phrase physical piano picnic picture piece pig pigeon pill pilot pink pioneer pipe pistol pitch pizza place planet plastic plate play please pledge pluck plug plunge poem poet point polar pole police pond pony pool popular portion position possible post potato pottery poverty powder power practice praise predict prefer prepare present pretty prevent price pride primary print priority prison private prize problem process produce profit program project promote proof property prosper protect proud provide public pudding pull pulp pulse pumpkin punch pupil puppy purchase purity purpose purse push put puzzle pyramid quality quantum quarter question quick quit quiz quote rabbit raccoon race rack radar radio rail rain raise rally ramp ranch random range rapid rare rate rather raven raw razor ready real reason rebel rebuild recall receive recipe record recycle reduce reflect reform refuse region regret regular reject relax release relief rely remain remember remind remove render renew rent reopen repair repeat replace report require rescue resemble resist resource response result retire retreat return reunion reveal review reward rhythm rib ribbon rice rich ride ridge rifle right rigid ring riot ripple risk ritual rival river road roast robot robust rocket romance roof rookie room rose rotate rough round route royal rubber rude rug rule run runway rural sad saddle sadness safe sail salad salmon salon salt salute same sample sand satisfy satoshi sauce sausage save say scale scan scare scatter scene scheme school science scissors scorpion scout scrap screen script scrub sea search season seat second secret section security seed seek segment select sell seminar senior sense sentence series service session settle setup seven shadow shaft shallow share shed shell sheriff shield shift shine ship shiver shock shoe shoot shop short shoulder shove shrimp shrug shuffle shy sibling sick side siege sight sign silent silk silly silver similar simple since sing siren sister situate six size skate sketch ski skill skin skirt skull slab slam sleep slender slice slide slight slim slogan slot slow slush small smart smile smoke smooth snack snake snap sniff snow soap soccer social sock soda soft solar soldier solid solution solve someone song soon sorry sort soul sound soup source south space spare spatial spawn speak special speed spell spend sphere spice spider spike spin spirit split spoil sponsor spoon sport spot spray spread spring spy square squeeze squirrel stable stadium staff stage stairs stamp stand start state stay steak steel stem step stereo stick still sting stock stomach stone stool story stove strategy street strike strong struggle student stuff stumble style subject submit subway success such sudden suffer sugar suggest suit summer sun sunny sunset super supply supreme sure surface surge surprise surround survey suspect sustain swallow swamp swap swarm swear sweet swift swim swing switch sword symbol symptom syrup system table tackle tag tail talent talk tank tape target task taste tattoo taxi teach team tell ten tenant tennis tent term test text thank that theme then theory there they thing this thought three thrive throw thumb thunder ticket tide tiger tilt timber time tiny tip tired tissue title toast tobacco today toddler toe together toilet token tomato tomorrow tone tongue tonight tool tooth top topic topple torch tornado tortoise toss total tourist toward tower town toy track trade traffic tragic train transfer trap trash travel tray treat tree trend trial tribe trick trigger trim trip trophy trouble truck true truly trumpet trust truth try tube tuition tumble tuna tunnel turkey turn turtle twelve twenty twice twin twist two type typical ugly umbrella unable unaware uncle uncover under undo unfair unfold unhappy uniform unique unit universe unknown unlock until unusual unveil update upgrade uphold upon upper upset urban urge usage use used useful useless usual utility vacant vacuum vague valid valley valve van vanish vapor various vast vault vehicle velvet vendor venture venue verb verify version very vessel veteran viable vibrant vicious victory video view village vintage violin virtual virus visa visit visual vital vivid vocal voice void volcano volume vote voyage wage wagon wait walk wall walnut want warfare warm warrior wash wasp waste water wave way wealth weapon wear weasel weather web wedding weekend weird welcome west wet whale what wheat wheel when where whip whisper wide width wife wild will win window wine wing wink winner winter wire wisdom wise wish witness wolf woman wonder wood wool word work world worry worth wrap wreck wrestle wrist write wrong yard year yellow you young youth zebra zero zone zoo".split(' ');
+const BIP39_INDICE = new Map(BIP39.map((p, i) => [p, i]));
+
+const utf8 = (s) => new TextEncoder().encode(s);
+const b64 = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+const deB64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const aleatorio = (n) => crypto.getRandomValues(new Uint8Array(n));
+const normalizar = (s) => String(s).normalize('NFKC');
+
+async function derivarBits(segredo, salt, iteracoes, bits) {
+  const base = await crypto.subtle.importKey('raw', utf8(normalizar(segredo)), 'PBKDF2', false, ['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: iteracoes }, base, bits));
+}
+
+// Access-key verifier: lets the UI say "wrong access key" without revealing anything about the key.
+async function calcularVerificador(acesso, salt, iteracoes) {
+  return derivarBits('acesso\u0000' + acesso, salt, iteracoes, 256);
+}
+
+// AES-256 key derived from BOTH keys together.
+async function derivarChaveAes(acesso, cripto, salt, iteracoes) {
+  const bits = await derivarBits('aes\u0000' + acesso + '\u0000' + cripto, salt, iteracoes, 256);
+  return crypto.subtle.importKey('raw', bits, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
+function igualConstante(a, b) {
+  if (a.length !== b.length) return false;
+  let dif = 0;
+  for (let i = 0; i < a.length; i++) dif |= a[i] ^ b[i];
+  return dif === 0;
+}
+
+async function cifrarCarteira({ descricao, cifrarDescricao = false, palavras, acesso, cripto }, iteracoes = ITERACOES) {
+  const id = crypto.randomUUID();
+  const saltVerificador = aleatorio(16);
+  const saltChave = aleatorio(16);
+  const iv = aleatorio(12);
+  const verificador = await calcularVerificador(acesso, saltVerificador, iteracoes);
+  const chave = await derivarChaveAes(acesso, cripto, saltChave, iteracoes);
+  const dados = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv, additionalData: utf8(id) }, chave, utf8(palavras.join(' ')));
+  const arquivo = {
+    formato: FORMATO,
+    versao: VERSAO,
+    id,
+    descricao: cifrarDescricao ? '' : descricao,
+    criadoEm: new Date().toISOString(),
+    kdf: { algoritmo: 'PBKDF2-SHA256', iteracoes },
+    saltVerificador: b64(saltVerificador),
+    verificador: b64(verificador),
+    saltChave: b64(saltChave),
+    iv: b64(iv),
+    dados: b64(dados),
+  };
+  if (cifrarDescricao) {
+    const ivDesc = aleatorio(12);
+    const dadosDesc = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: ivDesc, additionalData: utf8(id + '\u0000descricao') }, chave, utf8(descricao));
+    arquivo.descricaoCifrada = { iv: b64(ivDesc), dados: b64(dadosDesc) };
+  }
+  return arquivo;
+}
+
+class ErroCofre extends Error {
+  constructor(codigo) { super(codigo); this.codigo = codigo; }   // codigo: FORMATO | ACESSO | CRIPTO
+}
+
+// Returns { palavras: string[], descricao: string }
+async function decifrarCarteira(obj, acesso, cripto) {
+  if (!obj || !FORMATOS_ACEITOS.includes(obj.formato) || !obj.kdf || !obj.dados) throw new ErroCofre('FORMATO');
+  const it = obj.kdf.iteracoes;
+  const verificador = await calcularVerificador(acesso, deB64(obj.saltVerificador), it);
+  if (!igualConstante(verificador, deB64(obj.verificador))) throw new ErroCofre('ACESSO');
+  const chave = await derivarChaveAes(acesso, cripto, deB64(obj.saltChave), it);
+  let texto, descricao = obj.descricao || '';
+  try {
+    texto = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: deB64(obj.iv), additionalData: utf8(obj.id) }, chave, deB64(obj.dados));
+    if (obj.descricaoCifrada) {
+      const d = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: deB64(obj.descricaoCifrada.iv), additionalData: utf8(obj.id + '\u0000descricao') },
+        chave, deB64(obj.descricaoCifrada.dados));
+      descricao = new TextDecoder().decode(d);
+    }
+  } catch {
+    throw new ErroCofre('CRIPTO');
+  }
+  return { palavras: new TextDecoder().decode(texto).split(' '), descricao };
+}
+
+// ---- BIP39 ----
+function limparPalavra(p) { return String(p || '').trim().toLowerCase(); }
+function palavraValida(p) { return BIP39_INDICE.has(limparPalavra(p)); }
+
+// Returns { ok: true } or { ok: false, codigo: 'QTD' | 'PALAVRA' | 'CHECKSUM', n?, posicoes? }
+async function validarFrase(palavras) {
+  const lista = palavras.map(limparPalavra);
+  const n = lista.length;
+  if (!QUANTIDADES.includes(n)) return { ok: false, codigo: 'QTD', n };
+  const posicoes = lista.map((p, i) => palavraValida(p) ? -1 : i + 1).filter(i => i > 0);
+  if (posicoes.length) return { ok: false, codigo: 'PALAVRA', posicoes };
+  let bits = '';
+  for (const p of lista) bits += BIP39_INDICE.get(p).toString(2).padStart(11, '0');
+  const tamChecksum = n / 3;                    // 12→4, 18→6, 24→8 bits
+  const tamEntropia = bits.length - tamChecksum;
+  const entropia = new Uint8Array(tamEntropia / 8);
+  for (let i = 0; i < entropia.length; i++) entropia[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', entropia));
+  const checksumCalc = hash[0].toString(2).padStart(8, '0').slice(0, tamChecksum);
+  if (checksumCalc !== bits.slice(tamEntropia)) return { ok: false, codigo: 'CHECKSUM' };
+  return { ok: true };
+}
+
+// ---- Password strength (0..4) ----
+function forcaSenha(s) {
+  if (!s) return 0;
+  let pontos = 0;
+  if (s.length >= 10) pontos++;
+  if (s.length >= 14) pontos++;
+  if (s.length >= 18) pontos++;
+  const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter(r => r.test(s)).length;
+  if (classes >= 3) pontos++;
+  if (classes <= 1 && pontos > 1) pontos--;
+  return Math.min(4, pontos);
+}
+// ==== FIM LOGICA ====
+
+// =====================================================================
+//  Translations
+// =====================================================================
+const IDIOMAS = {
+  en: {
+    slogan: 'your recovery phrase, encrypted. One file, two keys, no internet.',
+    semPasta: 'No folder open', pasta: 'Folder: {nome}', modoManual: 'Manual mode',
+    abrirPasta: 'Open folder', trocarPasta: 'Change folder', recarregar: 'Read the folder again',
+    incompativelTitulo: 'This browser has no cryptography support here',
+    incompativelTexto: 'The Web Crypto API is not available on this page. Open the file in an up-to-date Chrome, Edge or Firefox.',
+    inicioTitulo: 'Where are your wallets stored?',
+    inicioTexto: 'Choose the folder (for example, a second USB drive) where the encrypted files live. The page reads and writes the files there directly.',
+    escolherPasta: 'Choose folder', reabrirPasta: 'Reopen folder "{nome}"',
+    linkManual: "Can't choose a folder? Use manual mode",
+    manualTexto: 'In manual mode you load the .json files to see the cards, and each new wallet is downloaded by the browser for you to move to the folder you want.',
+    leiaAntes: 'Read before using',
+    aviso1: 'There is no password recovery. Lose the access key or the encryption key and the words are gone.',
+    aviso2: 'Type the words. Do not copy and paste: the clipboard can be read by other programs.',
+    aviso3: 'Use a trusted computer, with nobody watching the screen, and close the tab when done.',
+    aviso4: 'This page never touches the network. Everything happens inside your browser.',
+    aviso5: 'If the files will be kept online (cloud, e-mail), anyone who gets them can try keys without limit. Use long keys and encrypt the description.',
+    rodape: 'Twinlock v{versao} · official source: {url} · verify the SHA-256 of this file before use',
+    autotestePendente: 'self-test pending', autotesteOk: 'cryptography self-test OK', autotesteFalhou: 'SELF-TEST FAILED: {erro}',
+    novaCarteira: 'New wallet', cancelar: 'Cancel', fechar: 'Close', voltar: '← Back', continuar: 'Continue →', salvar: 'Save wallet',
+    passo1: '1 · Name and keys', passo2: '2 · Words', passo3: '3 · Review and save',
+    descricao: 'Description', descricaoPlaceholder: 'e.g. Ledger Nano X',
+    cifrarDescricao: 'Also encrypt the description',
+    cifrarDescricaoDica: 'Recommended if the file will be stored online. The card will show only the file name until unlocked.',
+    chaveAcesso: 'Access key', chaveCripto: 'Encryption key', repitaAcesso: 'Repeat the access key', repitaCripto: 'Repeat the encryption key',
+    regraTamAcesso: 'At least 8 characters', regraTamCripto: 'At least 12 characters', regraMix: 'Contains letters and numbers',
+    regraDif: 'Different from the access key', regraIgual: 'Both entries match',
+    forca: ['', 'Weak', 'Fair', 'Good', 'Strong'],
+    combinado: 'Combined length of the two keys: {n} characters. For files kept online, aim for {min} or more.',
+    avisoChaves: 'The two keys together generate the key that encrypts the words. Neither of them is stored anywhere. Keep them somewhere safe, apart from the files.',
+    qtdPalavras: 'Number of words',
+    dicaPalavras: 'Type in English, lowercase. Enter, space or Tab moves to the next field. The official BIP39 list completes the words as you type.',
+    validas: '{v} of {n} valid words', checksumOk: '✔ Checksum valid',
+    trocarQtd: 'Changing the count clears the words typed so far. Continue?',
+    resumoPalavras: '{n} words, checksum valid', resumoCifrada: ' (will be encrypted)',
+    avisoConferir: 'Check every word against your original paper. After saving, they can only be seen with both keys.',
+    salvando: 'Encrypting…', erroSalvar: 'Could not save: {erro}',
+    salvoPasta: 'Wallet saved as {nome}.', salvoDownload: 'File {nome} downloaded. Move it to your Twinlock folder.',
+    carteiraCifrada: 'Encrypted wallet', semDescricao: '(no description)', criadaEm: 'Created {data} · {nome}',
+    abrirInfo: 'File {nome} · created {data}', abrir: 'Open', verificando: 'Checking…',
+    erroAcesso: 'Wrong access key.', erroCripto: 'Wrong encryption key.', erroFormato: 'Unknown file format.',
+    palavrasQtd: '{n} words', travaEm: 'Auto-lock in',
+    avisoAberta: 'Hover a word to see it (on a phone, touch and hold; with the keyboard, use Tab). "Reveal all" shows everything for 30 seconds. The words hide themselves when you switch tabs or after two minutes without activity.',
+    revelarTodas: 'Reveal all', ocultarTodas: 'Hide all', ocultadasNovamente: 'Words hidden again.',
+    excluir: 'Delete wallet', excluirPrompt: 'To permanently delete "{desc}" ({nome}), type {palavra}:', excluirPalavra: 'DELETE',
+    excluida: 'Wallet deleted.', erroExcluir: 'Could not delete: {erro}',
+    travaTempo: 'Time is up: the words were hidden.', travaFoco: 'Tab lost focus: the words were hidden.',
+    colarBloqueado: 'Pasting is blocked for safety. Type the words.',
+    pastaErro: 'Could not open the folder: {erro}', permissaoNegada: 'Permission to the folder was denied.', pastaRelida: 'Folder re-read.',
+    carregadas: '{n} wallet(s) loaded.', semApiPasta: 'This browser cannot write directly to a folder; using manual mode.',
+    erroQtd: 'Invalid count: {n} words.', erroPalavra: 'Word not in the BIP39 list at position {pos}.',
+    erroChecksum: 'Invalid checksum: some word is wrong or out of order.',
+  },
+  'pt-BR': {
+    slogan: 'sua frase de recuperação, cifrada. Um arquivo, duas chaves, sem internet.',
+    semPasta: 'Nenhuma pasta aberta', pasta: 'Pasta: {nome}', modoManual: 'Modo manual',
+    abrirPasta: 'Abrir pasta', trocarPasta: 'Trocar pasta', recarregar: 'Ler a pasta novamente',
+    incompativelTitulo: 'Navegador sem suporte à criptografia',
+    incompativelTexto: 'A Web Crypto API não está disponível nesta página. Abra o arquivo no Chrome, no Edge ou no Firefox atualizados.',
+    inicioTitulo: 'Onde ficam as carteiras?',
+    inicioTexto: 'Escolha a pasta (por exemplo, um segundo pen drive) onde os arquivos cifrados ficam guardados. A página lê e grava os arquivos diretamente nela.',
+    escolherPasta: 'Escolher pasta', reabrirPasta: 'Reabrir pasta "{nome}"',
+    linkManual: 'Não consegue escolher pasta? Use o modo manual',
+    manualTexto: 'No modo manual você carrega os arquivos .json para ver os cards, e cada carteira nova é baixada pelo navegador para você mover até a pasta desejada.',
+    leiaAntes: 'Leia antes de usar',
+    aviso1: 'Não existe recuperação de senha. Se perder a chave de acesso ou a chave de criptografia, as palavras estão perdidas.',
+    aviso2: 'Digite as palavras. Não copie e cole: a área de transferência pode ser lida por outros programas.',
+    aviso3: 'Use em um computador de confiança, sem ninguém olhando a tela, e feche a aba ao terminar.',
+    aviso4: 'Esta página não acessa a internet. Tudo acontece no seu navegador.',
+    aviso5: 'Se os arquivos ficarem na internet (nuvem, e-mail), quem os obtiver pode testar chaves sem limite. Use chaves longas e cifre a descrição.',
+    rodape: 'Twinlock v{versao} · origem oficial: {url} · confira o SHA-256 deste arquivo antes de usar',
+    autotestePendente: 'autoteste pendente', autotesteOk: 'autoteste da criptografia OK', autotesteFalhou: 'AUTOTESTE FALHOU: {erro}',
+    novaCarteira: 'Nova carteira', cancelar: 'Cancelar', fechar: 'Fechar', voltar: '← Voltar', continuar: 'Continuar →', salvar: 'Salvar carteira',
+    passo1: '1 · Identificação e chaves', passo2: '2 · Palavras', passo3: '3 · Conferir e salvar',
+    descricao: 'Descrição', descricaoPlaceholder: 'Ex.: Ledger Nano X',
+    cifrarDescricao: 'Cifrar também a descrição',
+    cifrarDescricaoDica: 'Recomendado se o arquivo ficar na nuvem. O card mostra só o nome do arquivo até ser aberto.',
+    chaveAcesso: 'Chave de acesso', chaveCripto: 'Chave de criptografia', repitaAcesso: 'Repita a chave de acesso', repitaCripto: 'Repita a chave de criptografia',
+    regraTamAcesso: 'Pelo menos 8 caracteres', regraTamCripto: 'Pelo menos 12 caracteres', regraMix: 'Contém letras e números',
+    regraDif: 'Diferente da chave de acesso', regraIgual: 'As duas digitações coincidem',
+    forca: ['', 'Fraca', 'Razoável', 'Boa', 'Forte'],
+    combinado: 'Tamanho somado das duas chaves: {n} caracteres. Para arquivos na nuvem, procure ter {min} ou mais.',
+    avisoChaves: 'As duas chaves, juntas, geram a chave que cifra as palavras. Nenhuma delas é gravada em lugar algum. Guarde-as em local seguro e separado dos arquivos.',
+    qtdPalavras: 'Quantidade de palavras',
+    dicaPalavras: 'Digite em inglês, em letras minúsculas. Enter, espaço ou Tab passa para a próxima. A lista oficial BIP39 completa as palavras enquanto você digita.',
+    validas: '{v} de {n} palavras válidas', checksumOk: '✔ Checksum válido',
+    trocarQtd: 'Trocar a quantidade apaga as palavras já digitadas. Continuar?',
+    resumoPalavras: '{n} palavras, checksum válido', resumoCifrada: ' (será cifrada)',
+    avisoConferir: 'Confira cada palavra com o seu papel original. Depois de salvar, elas só poderão ser vistas com as duas chaves.',
+    salvando: 'Cifrando…', erroSalvar: 'Não foi possível salvar: {erro}',
+    salvoPasta: 'Carteira salva em {nome}.', salvoDownload: 'Arquivo {nome} baixado. Mova-o para a sua pasta do Twinlock.',
+    carteiraCifrada: 'Carteira cifrada', semDescricao: '(sem descrição)', criadaEm: 'Criada em {data} · {nome}',
+    abrirInfo: 'Arquivo {nome} · criado em {data}', abrir: 'Abrir', verificando: 'Verificando…',
+    erroAcesso: 'Chave de acesso incorreta.', erroCripto: 'Chave de criptografia incorreta.', erroFormato: 'Arquivo em formato desconhecido.',
+    palavrasQtd: '{n} palavras', travaEm: 'Trava automática em',
+    avisoAberta: 'Passe o mouse sobre uma palavra para vê-la (no celular, toque e segure; no teclado, use Tab). "Revelar todas" mostra tudo por 30 segundos. As palavras somem sozinhas ao trocar de aba ou após dois minutos sem atividade.',
+    revelarTodas: 'Revelar todas', ocultarTodas: 'Ocultar todas', ocultadasNovamente: 'Palavras ocultadas novamente.',
+    excluir: 'Excluir carteira', excluirPrompt: 'Para excluir definitivamente "{desc}" ({nome}), digite {palavra}:', excluirPalavra: 'EXCLUIR',
+    excluida: 'Carteira excluída.', erroExcluir: 'Não foi possível excluir: {erro}',
+    travaTempo: 'Tempo esgotado: as palavras foram ocultadas.', travaFoco: 'Aba saiu de foco: as palavras foram ocultadas.',
+    colarBloqueado: 'Colar está bloqueado por segurança. Digite as palavras.',
+    pastaErro: 'Não foi possível abrir a pasta: {erro}', permissaoNegada: 'Permissão negada para a pasta.', pastaRelida: 'Pasta relida.',
+    carregadas: '{n} carteira(s) carregada(s).', semApiPasta: 'Este navegador não permite gravar direto na pasta; usando o modo manual.',
+    erroQtd: 'Quantidade inválida: {n} palavras.', erroPalavra: 'Palavra fora da lista BIP39 na posição {pos}.',
+    erroChecksum: 'Checksum inválido: alguma palavra está errada ou fora de ordem.',
+  },
+  es: {
+    slogan: 'tu frase de recuperación, cifrada. Un archivo, dos claves, sin internet.',
+    semPasta: 'Ninguna carpeta abierta', pasta: 'Carpeta: {nome}', modoManual: 'Modo manual',
+    abrirPasta: 'Abrir carpeta', trocarPasta: 'Cambiar carpeta', recarregar: 'Volver a leer la carpeta',
+    incompativelTitulo: 'Este navegador no tiene soporte de criptografía aquí',
+    incompativelTexto: 'La Web Crypto API no está disponible en esta página. Abre el archivo en Chrome, Edge o Firefox actualizados.',
+    inicioTitulo: '¿Dónde están tus billeteras?',
+    inicioTexto: 'Elige la carpeta (por ejemplo, un segundo pendrive) donde se guardan los archivos cifrados. La página lee y escribe los archivos directamente allí.',
+    escolherPasta: 'Elegir carpeta', reabrirPasta: 'Reabrir carpeta "{nome}"',
+    linkManual: '¿No puedes elegir carpeta? Usa el modo manual',
+    manualTexto: 'En modo manual cargas los archivos .json para ver las tarjetas, y cada billetera nueva la descarga el navegador para que la muevas a la carpeta que quieras.',
+    leiaAntes: 'Lee antes de usar',
+    aviso1: 'No hay recuperación de contraseña. Si pierdes la clave de acceso o la clave de cifrado, las palabras se pierden.',
+    aviso2: 'Escribe las palabras. No copies y pegues: otros programas pueden leer el portapapeles.',
+    aviso3: 'Usa una computadora de confianza, sin nadie mirando la pantalla, y cierra la pestaña al terminar.',
+    aviso4: 'Esta página nunca toca la red. Todo ocurre dentro de tu navegador.',
+    aviso5: 'Si los archivos quedarán en internet (nube, correo), quien los obtenga puede probar claves sin límite. Usa claves largas y cifra la descripción.',
+    rodape: 'Twinlock v{versao} · origen oficial: {url} · verifica el SHA-256 de este archivo antes de usarlo',
+    autotestePendente: 'autoprueba pendiente', autotesteOk: 'autoprueba de criptografía OK', autotesteFalhou: 'AUTOPRUEBA FALLIDA: {erro}',
+    novaCarteira: 'Nueva billetera', cancelar: 'Cancelar', fechar: 'Cerrar', voltar: '← Volver', continuar: 'Continuar →', salvar: 'Guardar billetera',
+    passo1: '1 · Nombre y claves', passo2: '2 · Palabras', passo3: '3 · Revisar y guardar',
+    descricao: 'Descripción', descricaoPlaceholder: 'Ej.: Ledger Nano X',
+    cifrarDescricao: 'Cifrar también la descripción',
+    cifrarDescricaoDica: 'Recomendado si el archivo quedará en la nube. La tarjeta mostrará solo el nombre del archivo hasta abrirla.',
+    chaveAcesso: 'Clave de acceso', chaveCripto: 'Clave de cifrado', repitaAcesso: 'Repite la clave de acceso', repitaCripto: 'Repite la clave de cifrado',
+    regraTamAcesso: 'Al menos 8 caracteres', regraTamCripto: 'Al menos 12 caracteres', regraMix: 'Contiene letras y números',
+    regraDif: 'Distinta de la clave de acceso', regraIgual: 'Las dos entradas coinciden',
+    forca: ['', 'Débil', 'Regular', 'Buena', 'Fuerte'],
+    combinado: 'Longitud sumada de las dos claves: {n} caracteres. Para archivos en la nube, procura tener {min} o más.',
+    avisoChaves: 'Las dos claves juntas generan la clave que cifra las palabras. Ninguna se guarda en ningún lugar. Consérvalas en un sitio seguro, separado de los archivos.',
+    qtdPalavras: 'Cantidad de palabras',
+    dicaPalavras: 'Escribe en inglés, en minúsculas. Enter, espacio o Tab pasa a la siguiente. La lista oficial BIP39 completa las palabras mientras escribes.',
+    validas: '{v} de {n} palabras válidas', checksumOk: '✔ Checksum válido',
+    trocarQtd: 'Cambiar la cantidad borra las palabras ya escritas. ¿Continuar?',
+    resumoPalavras: '{n} palabras, checksum válido', resumoCifrada: ' (se cifrará)',
+    avisoConferir: 'Revisa cada palabra con tu papel original. Después de guardar, solo podrán verse con las dos claves.',
+    salvando: 'Cifrando…', erroSalvar: 'No se pudo guardar: {erro}',
+    salvoPasta: 'Billetera guardada como {nome}.', salvoDownload: 'Archivo {nome} descargado. Muévelo a tu carpeta de Twinlock.',
+    carteiraCifrada: 'Billetera cifrada', semDescricao: '(sin descripción)', criadaEm: 'Creada el {data} · {nome}',
+    abrirInfo: 'Archivo {nome} · creado el {data}', abrir: 'Abrir', verificando: 'Verificando…',
+    erroAcesso: 'Clave de acceso incorrecta.', erroCripto: 'Clave de cifrado incorrecta.', erroFormato: 'Formato de archivo desconocido.',
+    palavrasQtd: '{n} palabras', travaEm: 'Bloqueo automático en',
+    avisoAberta: 'Pasa el mouse sobre una palabra para verla (en el móvil, toca y mantén; con el teclado, usa Tab). "Mostrar todas" enseña todo durante 30 segundos. Las palabras se ocultan solas al cambiar de pestaña o tras dos minutos sin actividad.',
+    revelarTodas: 'Mostrar todas', ocultarTodas: 'Ocultar todas', ocultadasNovamente: 'Palabras ocultadas de nuevo.',
+    excluir: 'Eliminar billetera', excluirPrompt: 'Para eliminar definitivamente "{desc}" ({nome}), escribe {palavra}:', excluirPalavra: 'ELIMINAR',
+    excluida: 'Billetera eliminada.', erroExcluir: 'No se pudo eliminar: {erro}',
+    travaTempo: 'Tiempo agotado: las palabras se ocultaron.', travaFoco: 'La pestaña perdió el foco: las palabras se ocultaron.',
+    colarBloqueado: 'Pegar está bloqueado por seguridad. Escribe las palabras.',
+    pastaErro: 'No se pudo abrir la carpeta: {erro}', permissaoNegada: 'Permiso denegado para la carpeta.', pastaRelida: 'Carpeta releída.',
+    carregadas: '{n} billetera(s) cargada(s).', semApiPasta: 'Este navegador no permite escribir directamente en la carpeta; usando el modo manual.',
+    erroQtd: 'Cantidad inválida: {n} palabras.', erroPalavra: 'Palabra fuera de la lista BIP39 en la posición {pos}.',
+    erroChecksum: 'Checksum inválido: alguna palabra está mal o fuera de orden.',
+  },
+};
+function detectarIdioma() {
+  let salvo = null;
+  try { salvo = localStorage.getItem('twinlock.idioma'); } catch { /* no storage */ }
+  if (salvo && IDIOMAS[salvo]) return salvo;
+  const nav = (navigator.language || 'en').toLowerCase();
+  if (nav.startsWith('pt')) return 'pt-BR';
+  if (nav.startsWith('es')) return 'es';
+  return 'en';
+}
+let idioma = detectarIdioma();
+function t(chave, params) {
+  let s = (IDIOMAS[idioma] && IDIOMAS[idioma][chave]) ?? IDIOMAS.en[chave] ?? chave;
+  if (params) for (const k of Object.keys(params)) s = s.split('{' + k + '}').join(params[k]);
+  return s;
+}
+function aplicarIdioma() {
+  document.documentElement.lang = idioma;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  $('selIdioma').value = idioma;
+  $('rodapeVersao').textContent = t('rodape', { versao: VERSAO, url: URL_OFICIAL.replace(/^https?:\/\//, '') });
+  $('btnRecarregar').title = t('recarregar');
+  atualizarChipPasta();
+  if (estado.modo) renderizarCards();
+  if (dlgNova.open) { atualizarPasso1(); atualizarPasso2(); }
+  if (dlgAbrir.open) { $('btnRevelar').textContent = $('gradeAberta').classList.contains('oculta') ? t('revelarTodas') : t('ocultarTodas'); }
+}
+
+// =====================================================================
+//  Interface
+// =====================================================================
+const $ = (id) => document.getElementById(id);
+const TRAVA_MS = 2 * 60 * 1000;
+const REVELAR_TODAS_MS = 30 * 1000;
+
+const estado = {
+  modo: null,           // 'pasta' | 'manual'
+  pasta: null,          // FileSystemDirectoryHandle
+  carteiras: [],        // [{ nome, obj }]
+  aberta: null,
+  palavrasAbertas: null,
+  timerTrava: null,
+  fimTrava: 0,
+  passo: 1,
+};
+const dlgNova = $('dlgNova');
+const dlgAbrir = $('dlgAbrir');
+
+// ---------- utilities ----------
+let toastTimer;
+function toast(msg, erro = false) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'visivel' + (erro ? ' erro' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, erro ? 5000 : 3200);
+}
+function formatarData(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? '?' : d.toLocaleDateString(idioma) + ' ' + d.toLocaleTimeString(idioma, { hour: '2-digit', minute: '2-digit' });
+}
+function mensagemValidacao(r) {
+  if (r.codigo === 'QTD') return t('erroQtd', { n: r.n });
+  if (r.codigo === 'PALAVRA') return t('erroPalavra', { pos: r.posicoes.join(', ') });
+  return t('erroChecksum');
+}
+function mensagemErroCofre(e) {
+  if (e && e.codigo === 'ACESSO') return t('erroAcesso');
+  if (e && e.codigo === 'CRIPTO') return t('erroCripto');
+  if (e && e.codigo === 'FORMATO') return t('erroFormato');
+  return (e && e.message) || String(e);
+}
+function rotuloCarteira(c) {
+  if (c.obj.descricaoCifrada && !c.obj.descricao) return { texto: t('carteiraCifrada'), cifrada: true };
+  return { texto: c.obj.descricao || t('semDescricao'), cifrada: false };
+}
+
+// ---------- IndexedDB: remembers the chosen folder (a handle, never data) ----------
+function abrirBanco() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('twinlock', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('config');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function guardarPasta(handle) {
+  try {
+    const db = await abrirBanco();
+    const tx = db.transaction('config', 'readwrite');
+    tx.objectStore('config').put(handle, 'pasta');
+    await new Promise((res) => { tx.oncomplete = res; tx.onerror = res; });
+  } catch { /* optional */ }
+}
+async function lerPastaGuardada() {
+  try {
+    const db = await abrirBanco();
+    return await new Promise((res) => {
+      const r = db.transaction('config').objectStore('config').get('pasta');
+      r.onsuccess = () => res(r.result || null);
+      r.onerror = () => res(null);
+    });
+  } catch { return null; }
+}
+
+// ---------- folder (File System Access API) ----------
+const temApiPasta = typeof window.showDirectoryPicker === 'function';
+
+function atualizarChipPasta() {
+  const chip = $('chipPasta');
+  if (estado.modo === 'pasta') { chip.textContent = t('pasta', { nome: estado.pasta.name }); chip.title = estado.pasta.name; chip.classList.add('ok'); }
+  else if (estado.modo === 'manual') { chip.textContent = t('modoManual'); chip.title = ''; chip.classList.remove('ok'); }
+  else { chip.textContent = t('semPasta'); chip.title = ''; chip.classList.remove('ok'); }
+  $('btnAbrirPasta').textContent = estado.modo === 'pasta' ? t('trocarPasta') : t('abrirPasta');
+}
+async function escolherPasta() {
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'twinlock' });
+    await usarPasta(handle);
+    await guardarPasta(handle);
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+    toast(t('pastaErro', { erro: e.message || e }), true);
+  }
+}
+async function usarPasta(handle) {
+  estado.pasta = handle;
+  estado.modo = 'pasta';
+  atualizarChipPasta();
+  $('btnRecarregar').hidden = false;
+  await carregarCarteiras();
+}
+async function tentarReabrirPasta() {
+  const handle = await lerPastaGuardada();
+  if (!handle) return;
+  const perm = await handle.queryPermission({ mode: 'readwrite' });
+  if (perm === 'granted') { await usarPasta(handle); return; }
+  const btn = $('btnReabrirPasta');
+  btn.textContent = t('reabrirPasta', { nome: handle.name });
+  btn.hidden = false;
+  btn.onclick = async () => {
+    const p = await handle.requestPermission({ mode: 'readwrite' });
+    if (p === 'granted') await usarPasta(handle);
+    else toast(t('permissaoNegada'), true);
+  };
+}
+async function carregarCarteiras() {
+  if (estado.modo !== 'pasta') return;
+  const lista = [];
+  for await (const [nome, h] of estado.pasta.entries()) {
+    if (h.kind !== 'file' || !nome.toLowerCase().endsWith('.json')) continue;
+    try {
+      const obj = JSON.parse(await (await h.getFile()).text());
+      if (obj && FORMATOS_ACEITOS.includes(obj.formato)) lista.push({ nome, obj });
+    } catch { /* some other file */ }
+  }
+  lista.sort((a, b) => String(a.obj.criadoEm).localeCompare(String(b.obj.criadoEm)));
+  estado.carteiras = lista;
+  renderizarCards();
+}
+function proximoNomeArquivo() {
+  const usados = new Set(estado.carteiras.map(c => c.nome.toLowerCase()));
+  for (let i = 1; i < 1000; i++) {
+    const nome = 'c' + String(i).padStart(2, '0') + '.json';
+    if (!usados.has(nome)) return nome;
+  }
+  return 'c' + Date.now() + '.json';
+}
+async function gravarCarteira(obj) {
+  const nome = proximoNomeArquivo();
+  const conteudo = JSON.stringify(obj, null, 2);
+  if (estado.modo === 'pasta') {
+    const fh = await estado.pasta.getFileHandle(nome, { create: true });
+    const w = await fh.createWritable();
+    await w.write(conteudo);
+    await w.close();
+  } else {
+    const blob = new Blob([conteudo], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  estado.carteiras.push({ nome, obj });
+  estado.carteiras.sort((a, b) => String(a.obj.criadoEm).localeCompare(String(b.obj.criadoEm)));
+  renderizarCards();
+  return nome;
+}
+async function excluirCarteira(carteira) {
+  if (estado.modo === 'pasta') await estado.pasta.removeEntry(carteira.nome);
+  estado.carteiras = estado.carteiras.filter(c => c !== carteira);
+  renderizarCards();
+}
+
+// ---------- manual mode ----------
+function ativarModoManual() {
+  estado.modo = 'manual';
+  estado.pasta = null;
+  $('painelManual').hidden = false;
+  $('btnRecarregar').hidden = true;
+  atualizarChipPasta();
+  renderizarCards();
+}
+async function carregarArquivosManuais(files) {
+  const lista = [];
+  for (const f of files) {
+    try {
+      const obj = JSON.parse(await f.text());
+      if (obj && FORMATOS_ACEITOS.includes(obj.formato)) lista.push({ nome: f.name, obj });
+    } catch { /* ignore */ }
+  }
+  lista.sort((a, b) => String(a.obj.criadoEm).localeCompare(String(b.obj.criadoEm)));
+  estado.carteiras = lista;
+  renderizarCards();
+  toast(t('carregadas', { n: lista.length }));
+}
+
+// ---------- cards ----------
+function renderizarCards() {
+  $('secaoCarteiras').hidden = false;
+  const grade = $('gradeCards');
+  grade.innerHTML = '';
+  for (const c of estado.carteiras) {
+    const b = document.createElement('button');
+    b.className = 'card';
+    b.type = 'button';
+    b.innerHTML = `<div class="titulo">🔒 <span></span></div><div class="meta"></div>`;
+    const r = rotuloCarteira(c);
+    b.querySelector('.titulo span').textContent = r.texto;
+    if (r.cifrada) b.querySelector('.titulo').classList.add('cifrada');
+    b.querySelector('.meta').textContent = t('criadaEm', { data: formatarData(c.obj.criadoEm), nome: c.nome });
+    b.addEventListener('click', () => abrirCarteira(c));
+    grade.appendChild(b);
+  }
+  const nova = document.createElement('button');
+  nova.className = 'card nova';
+  nova.type = 'button';
+  nova.innerHTML = '<span class="mais">+</span><span></span>';
+  nova.querySelector('span + span').textContent = t('novaCarteira');
+  nova.addEventListener('click', iniciarNova);
+  grade.appendChild(nova);
+}
+
+// ---------- show/hide password, close buttons ----------
+document.querySelectorAll('.olho').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const inp = $(btn.dataset.olho);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    inp.focus();
+  });
+});
+document.querySelectorAll('[data-fechar]').forEach(btn => {
+  btn.addEventListener('click', () => $(btn.dataset.fechar).close());
+});
+
+// =====================================================================
+//  New wallet
+// =====================================================================
+const camposChave = ['acesso', 'acesso2', 'cripto', 'cripto2'];
+
+function iniciarNova() {
+  limparNova();
+  mostrarPasso(1);
+  dlgNova.showModal();
+  $('descricao').focus();
+}
+function limparNova() {
+  $('descricao').value = '';
+  $('cifrarDescricao').checked = false;
+  camposChave.forEach(id => { const i = $(id); i.value = ''; i.type = 'password'; });
+  document.querySelector('input[name="qtd"][value="24"]').checked = true;
+  montarGradeEntrada(24);
+  $('gradeConferencia').innerHTML = '';
+  $('erroSalvar').hidden = true;
+  atualizarPasso1();
+}
+function mostrarPasso(n) {
+  estado.passo = n;
+  for (let i = 1; i <= 3; i++) {
+    $('passo' + i).hidden = i !== n;
+    const s = document.querySelector(`.passos [data-passo="${i}"]`);
+    s.className = i === n ? 'ativo' : (i < n ? 'feito' : '');
+  }
+  $('btnVoltar').hidden = n === 1;
+  $('btnContinuar').hidden = n === 3;
+  $('btnSalvar').hidden = n !== 3;
+  if (n === 1) atualizarPasso1();
+  if (n === 2) { atualizarPasso2(); const primeiro = $('gradeEntrada').querySelector('input'); if (primeiro) primeiro.focus(); }
+}
+function pintarForca(valor, barraId, rotuloId) {
+  const f = forcaSenha(valor);
+  const cores = ['transparent', 'var(--perigo)', 'var(--aviso)', 'var(--ok)', 'var(--ok)'];
+  const barra = $(barraId);
+  barra.style.width = (f * 25) + '%';
+  barra.style.background = cores[f];
+  $(rotuloId).textContent = t('forca')[f] || ' ';
+}
+function marcar(li, ok) { li.classList.toggle('ok', ok); return ok; }
+function atualizarPasso1() {
+  const desc = $('descricao').value.trim();
+  const a = $('acesso').value, a2 = $('acesso2').value;
+  const c = $('cripto').value, c2 = $('cripto2').value;
+  $('contDescricao').textContent = $('descricao').value.length;
+  pintarForca(a, 'forcaAcesso', 'rotuloForcaAcesso');
+  pintarForca(c, 'forcaCripto', 'rotuloForcaCripto');
+  const okA = marcar($('regrasAcesso').querySelector('[data-regra="tam"]'), a.length >= MIN_ACESSO);
+  const okA2 = marcar($('regraAcessoIgual'), a.length > 0 && a === a2);
+  const okC1 = marcar($('regrasCripto').querySelector('[data-regra="tam"]'), c.length >= MIN_CRIPTO);
+  const okC2 = marcar($('regrasCripto').querySelector('[data-regra="mix"]'), /[A-Za-z]/.test(c) && /[0-9]/.test(c));
+  const okC3 = marcar($('regrasCripto').querySelector('[data-regra="dif"]'), c.length > 0 && c !== a);
+  const okC4 = marcar($('regraCriptoIgual'), c.length > 0 && c === c2);
+  const soma = a.length + c.length;
+  const comb = $('combinado');
+  comb.textContent = t('combinado', { n: soma, min: COMBINADO_RECOMENDADO });
+  comb.classList.toggle('ok', soma >= COMBINADO_RECOMENDADO);
+  const tudo = desc.length > 0 && desc.length <= MAX_DESCRICAO && okA && okA2 && okC1 && okC2 && okC3 && okC4;
+  if (estado.passo === 1) $('btnContinuar').disabled = !tudo;
+  return tudo;
+}
+['descricao', ...camposChave].forEach(id => $(id).addEventListener('input', atualizarPasso1));
+
+// ---- Step 2: word grid ----
+function montarGradeEntrada(qtd) {
+  const grade = $('gradeEntrada');
+  grade.innerHTML = '';
+  for (let i = 1; i <= qtd; i++) {
+    const div = document.createElement('div');
+    div.className = 'palavra';
+    div.innerHTML = `<b>${i}</b><input autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" list="listaBip39" inputmode="latin" data-pos="${i}">`;
+    const inp = div.querySelector('input');
+    inp.addEventListener('input', () => {
+      // Several words in one field (voice dictation, system autocomplete): spread them over the next positions.
+      if (/\s/.test(inp.value)) { distribuirPalavras(inp, inp.value); return; }
+      validarCampoPalavra(inp); atualizarPasso2();
+    });
+    inp.addEventListener('blur', () => { inp.value = limparPalavra(inp.value); validarCampoPalavra(inp); atualizarPasso2(); });
+    inp.addEventListener('paste', (e) => { e.preventDefault(); toast(t('colarBloqueado'), true); });
+    inp.addEventListener('keydown', (e) => {
+      const pos = Number(inp.dataset.pos);
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        inp.value = limparPalavra(inp.value);
+        validarCampoPalavra(inp); atualizarPasso2();
+        focarPalavra(pos + 1);
+      } else if (e.key === 'Backspace' && inp.value === '') {
+        e.preventDefault();
+        focarPalavra(pos - 1);
+      }
+    });
+    grade.appendChild(div);
+  }
+}
+function distribuirPalavras(inp, texto) {
+  const partes = texto.trim().split(/\s+/).filter(Boolean);
+  const inputs = [...$('gradeEntrada').querySelectorAll('input')];
+  let pos = Number(inp.dataset.pos);
+  if (!partes.length) inp.value = '';
+  for (const p of partes) {
+    const alvo = inputs[pos - 1];
+    if (!alvo) break;
+    alvo.value = limparPalavra(p);
+    validarCampoPalavra(alvo);
+    pos++;
+  }
+  atualizarPasso2();
+  focarPalavra(Math.min(pos, inputs.length));
+}
+function focarPalavra(pos) {
+  const alvo = $('gradeEntrada').querySelector(`input[data-pos="${pos}"]`);
+  if (alvo) { alvo.focus(); alvo.select(); }
+}
+function validarCampoPalavra(inp) {
+  const v = limparPalavra(inp.value);
+  const div = inp.parentElement;
+  div.classList.remove('ok', 'erro');
+  if (!v) return;
+  if (palavraValida(v)) div.classList.add('ok');
+  else if (!BIP39.some(p => p.startsWith(v))) div.classList.add('erro');   // not even a prefix of a valid word
+}
+function palavrasDigitadas() {
+  return [...$('gradeEntrada').querySelectorAll('input')].map(i => limparPalavra(i.value));
+}
+let validacaoPendente = 0;
+async function atualizarPasso2() {
+  const lista = palavrasDigitadas();
+  const validas = lista.filter(palavraValida).length;
+  $('contValidas').textContent = t('validas', { v: validas, n: lista.length });
+  const msg = $('msgChecksum');
+  if (estado.passo === 2) $('btnContinuar').disabled = true;
+  if (validas < lista.length) { msg.textContent = ''; msg.style.color = ''; return; }
+  const meu = ++validacaoPendente;
+  const r = await validarFrase(lista);
+  if (meu !== validacaoPendente) return;
+  msg.textContent = r.ok ? t('checksumOk') : '✖ ' + mensagemValidacao(r);
+  msg.style.color = r.ok ? 'var(--ok)' : 'var(--perigo)';
+  if (estado.passo === 2) $('btnContinuar').disabled = !r.ok;
+}
+$('seletorQtd').addEventListener('change', (e) => {
+  const qtd = Number(e.target.value);
+  const atual = palavrasDigitadas().length;
+  if (palavrasDigitadas().some(Boolean) && !confirm(t('trocarQtd'))) {
+    document.querySelector(`input[name="qtd"][value="${atual}"]`).checked = true;
+    return;
+  }
+  montarGradeEntrada(qtd);
+  atualizarPasso2();
+});
+
+// ---- Step 3 ----
+function montarConferencia() {
+  const lista = palavrasDigitadas();
+  $('resDescricao').textContent = $('descricao').value.trim() + ($('cifrarDescricao').checked ? t('resumoCifrada') : '');
+  $('resQtd').textContent = t('resumoPalavras', { n: lista.length });
+  preencherGradeLeitura($('gradeConferencia'), lista);
+}
+function preencherGradeLeitura(grade, lista, focavel = false) {
+  grade.innerHTML = '';
+  lista.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'palavra';
+    if (focavel) div.tabIndex = 0;   // Tab reveals one word at a time, no mouse needed
+    div.innerHTML = `<b>${i + 1}</b><span class="texto"></span>`;
+    div.querySelector('.texto').textContent = p;
+    grade.appendChild(div);
+  });
+}
+$('btnContinuar').addEventListener('click', () => {
+  if (estado.passo === 1 && atualizarPasso1()) mostrarPasso(2);
+  else if (estado.passo === 2) { montarConferencia(); mostrarPasso(3); }
+});
+$('btnVoltar').addEventListener('click', () => mostrarPasso(Math.max(1, estado.passo - 1)));
+$('btnSalvar').addEventListener('click', async () => {
+  const btn = $('btnSalvar');
+  const erro = $('erroSalvar');
+  erro.hidden = true;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> ' + t('salvando');
+  try {
+    const palavras = palavrasDigitadas();
+    const r = await validarFrase(palavras);
+    if (!r.ok) throw new Error(mensagemValidacao(r));
+    const obj = await cifrarCarteira({
+      descricao: $('descricao').value.trim().slice(0, MAX_DESCRICAO),
+      cifrarDescricao: $('cifrarDescricao').checked,
+      palavras,
+      acesso: $('acesso').value,
+      cripto: $('cripto').value,
+    });
+    const nome = await gravarCarteira(obj);
+    limparNova();
+    dlgNova.close();
+    toast(t(estado.modo === 'pasta' ? 'salvoPasta' : 'salvoDownload', { nome }));
+  } catch (e) {
+    erro.textContent = t('erroSalvar', { erro: e.message || e });
+    erro.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t('salvar');
+  }
+});
+dlgNova.addEventListener('close', limparNova);
+
+// =====================================================================
+//  Open wallet
+// =====================================================================
+function abrirCarteira(c) {
+  estado.aberta = c;
+  $('abrirTitulo').textContent = rotuloCarteira(c).texto;
+  $('abrirInfo').textContent = t('abrirInfo', { nome: c.nome, data: formatarData(c.obj.criadoEm) });
+  $('abrirAcesso').value = ''; $('abrirCripto').value = '';
+  $('abrirAcesso').type = 'password'; $('abrirCripto').type = 'password';
+  $('erroAbrir').hidden = true;
+  $('abrirChaves').hidden = false;
+  $('abrirPalavras').hidden = true;
+  $('btnDesbloquear').hidden = false;
+  $('btnRevelar').hidden = true;
+  $('btnExcluir').hidden = true;
+  dlgAbrir.showModal();
+  $('abrirAcesso').focus();
+}
+async function desbloquear() {
+  const btn = $('btnDesbloquear');
+  const erro = $('erroAbrir');
+  erro.hidden = true;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> ' + t('verificando');
+  try {
+    const { palavras, descricao } = await decifrarCarteira(estado.aberta.obj, $('abrirAcesso').value, $('abrirCripto').value);
+    estado.palavrasAbertas = palavras;
+    $('abrirAcesso').value = ''; $('abrirCripto').value = '';
+    if (descricao) $('abrirTitulo').textContent = descricao;
+    $('abrirQtd').textContent = t('palavrasQtd', { n: palavras.length });
+    preencherGradeLeitura($('gradeAberta'), palavras, true);
+    ocultarTodas();
+    $('abrirChaves').hidden = true;
+    $('abrirPalavras').hidden = false;
+    btn.hidden = true;
+    $('btnRevelar').hidden = false;
+    $('btnExcluir').hidden = estado.modo !== 'pasta';
+    iniciarTrava();
+  } catch (e) {
+    erro.textContent = mensagemErroCofre(e);
+    erro.hidden = false;
+    if (e.codigo === 'ACESSO') $('abrirAcesso').focus();
+    else if (e.codigo === 'CRIPTO') $('abrirCripto').focus();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t('abrir');
+  }
+}
+$('btnDesbloquear').addEventListener('click', desbloquear);
+['abrirAcesso', 'abrirCripto'].forEach(id => $(id).addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); desbloquear(); }
+}));
+
+// ---- reveal: one word at a time (hover, focus, touch) or all for 30 s ----
+let timerTodas = null;
+function ocultarTodas() {
+  clearTimeout(timerTodas); timerTodas = null;
+  $('gradeAberta').classList.add('oculta');
+  $('btnRevelar').textContent = t('revelarTodas');
+}
+$('btnRevelar').addEventListener('click', () => {
+  const g = $('gradeAberta');
+  if (g.classList.contains('oculta')) {
+    g.classList.remove('oculta');
+    $('btnRevelar').textContent = t('ocultarTodas');
+    clearTimeout(timerTodas);
+    timerTodas = setTimeout(() => { ocultarTodas(); toast(t('ocultadasNovamente')); }, REVELAR_TODAS_MS);
+  } else {
+    ocultarTodas();
+  }
+  reiniciarTrava();
+});
+// Touch: reveal while the finger is on the word. Mouse and keyboard are handled by CSS alone.
+const gradeAberta = $('gradeAberta');
+gradeAberta.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'mouse') return;
+  const p = e.target.closest('.palavra');
+  if (p) { p.classList.add('revelada'); reiniciarTrava(); }
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+  gradeAberta.addEventListener(ev, () => gradeAberta.querySelectorAll('.revelada').forEach(p => p.classList.remove('revelada'))));
+gradeAberta.addEventListener('contextmenu', (e) => e.preventDefault());   // no context menu on long press
+
+$('btnExcluir').addEventListener('click', async () => {
+  const c = estado.aberta;
+  const palavra = t('excluirPalavra');
+  const resposta = prompt(t('excluirPrompt', { desc: $('abrirTitulo').textContent, nome: c.nome, palavra }));
+  if (resposta !== palavra) return;
+  try {
+    await excluirCarteira(c);
+    dlgAbrir.close();
+    toast(t('excluida'));
+  } catch (e) {
+    toast(t('erroExcluir', { erro: e.message || e }), true);
+  }
+});
+
+// ---- auto-lock ----
+function limparExibicao() {
+  pararTrava();
+  estado.palavrasAbertas = null;
+  $('gradeAberta').innerHTML = '';
+  ocultarTodas();
+  $('abrirAcesso').value = ''; $('abrirCripto').value = '';
+}
+function travarAgora(motivo) {
+  if (!estado.palavrasAbertas) return;
+  limparExibicao();
+  if (estado.aberta) $('abrirTitulo').textContent = rotuloCarteira(estado.aberta).texto;
+  $('abrirChaves').hidden = false;
+  $('abrirPalavras').hidden = true;
+  $('btnDesbloquear').hidden = false;
+  $('btnRevelar').hidden = true;
+  $('btnExcluir').hidden = true;
+  if (dlgAbrir.open) toast(motivo);
+}
+function iniciarTrava() {
+  pararTrava();
+  estado.fimTrava = Date.now() + TRAVA_MS;
+  estado.timerTrava = setInterval(() => {
+    const resta = Math.max(0, estado.fimTrava - Date.now());
+    const s = Math.ceil(resta / 1000);
+    $('contagemTrava').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    if (resta <= 0) travarAgora(t('travaTempo'));
+  }, 250);
+}
+function reiniciarTrava() { if (estado.palavrasAbertas) estado.fimTrava = Date.now() + TRAVA_MS; }
+function pararTrava() { clearInterval(estado.timerTrava); estado.timerTrava = null; }
+['mousemove', 'keydown', 'pointerdown', 'scroll'].forEach(ev => dlgAbrir.addEventListener(ev, reiniciarTrava, { passive: true }));
+document.addEventListener('visibilitychange', () => { if (document.hidden) travarAgora(t('travaFoco')); });
+dlgAbrir.addEventListener('close', () => { limparExibicao(); $('abrirTitulo').textContent = ''; estado.aberta = null; });
+
+// =====================================================================
+//  Start-up
+// =====================================================================
+async function autoteste() {
+  const el = $('autoteste');
+  el.textContent = t('autotestePendente');
+  try {
+    if (BIP39.length !== 2048 || BIP39[0] !== 'abandon' || BIP39[2047] !== 'zoo') throw new Error('BIP39 list incomplete');
+    const frase = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'.split(' ');
+    const v = await validarFrase(frase);
+    if (!v.ok) throw new Error('BIP39 checksum');
+    const obj = await cifrarCarteira({ descricao: 't', cifrarDescricao: true, palavras: frase, acesso: 'a1b2c3d4', cripto: 'x9y8z7w6v5u4' }, 1000);
+    const volta = await decifrarCarteira(obj, 'a1b2c3d4', 'x9y8z7w6v5u4');
+    if (volta.palavras.join(' ') !== frase.join(' ') || volta.descricao !== 't') throw new Error('round trip');
+    let pegou = false;
+    try { await decifrarCarteira(obj, 'errada123', 'x9y8z7w6v5u4'); } catch (e) { pegou = e.codigo === 'ACESSO'; }
+    if (!pegou) throw new Error('verifier');
+    el.textContent = t('autotesteOk');
+  } catch (e) {
+    el.textContent = t('autotesteFalhou', { erro: e.message });
+    el.style.color = 'var(--perigo)';
+    toast(t('autotesteFalhou', { erro: e.message }), true);
+  }
+}
+
+(async function iniciar() {
+  aplicarIdioma();
+  $('selIdioma').addEventListener('change', (e) => {
+    idioma = e.target.value;
+    try { localStorage.setItem('twinlock.idioma', idioma); } catch { /* optional */ }
+    aplicarIdioma();
+  });
+  if (!window.crypto || !crypto.subtle) {
+    $('painelIncompativel').hidden = false;
+    $('painelInicio').hidden = true;
+    return;
+  }
+  // datalist with the 2048 words
+  const dl = $('listaBip39');
+  const frag = document.createDocumentFragment();
+  for (const p of BIP39) { const o = document.createElement('option'); o.value = p; frag.appendChild(o); }
+  dl.appendChild(frag);
+
+  $('btnEscolherPasta').addEventListener('click', escolherPasta);
+  $('btnAbrirPasta').addEventListener('click', escolherPasta);
+  $('btnRecarregar').addEventListener('click', async () => { await carregarCarteiras(); toast(t('pastaRelida')); });
+  $('btnModoManual').addEventListener('click', ativarModoManual);
+  $('inputArquivos').addEventListener('change', (e) => carregarArquivosManuais(e.target.files));
+
+  if (!temApiPasta) {
+    $('btnEscolherPasta').hidden = true;
+    $('btnAbrirPasta').hidden = true;
+    $('btnModoManual').hidden = true;
+    ativarModoManual();
+    toast(t('semApiPasta'));
+  } else {
+    await tentarReabrirPasta();
+  }
+  autoteste();
+})();
+</script>
+</body>
+</html>

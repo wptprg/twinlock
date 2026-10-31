@@ -1,0 +1,20 @@
+{
+  "formato": "twinlock/1",
+  "versao": "1.0.0",
+  "id": "c00e763d-0289-493b-9503-c5954bf6bddb",
+  "descricao": "",
+  "criadoEm": "2026-10-31T12:00:00.000Z",
+  "kdf": {
+    "algoritmo": "PBKDF2-SHA256",
+    "iteracoes": 2000
+  },
+  "saltVerificador": "IpET/QiAiAzEKNhZDidCQA==",
+  "verificador": "BM1rla5/gIoYZ27JmRDtlFHdFrpasIuFDRDGo2tkk4U=",
+  "saltChave": "inzUW5xoGxbWwvQIlcHT+g==",
+  "iv": "MApsYf1Ob9y26uJF",
+  "dados": "IrIrHJp31V8pPiZpwIL7Ed4btUfRaD3T6u/xv/vpZOxeqF83UD+2vAPOyCzVTvEhSa3WFuS3xuojTpDe4qYHoYyPt6cpI4JuUH7r1tluzlkUBDUz6ye7ZNCQk5qm2WAyit/BID8YjTq03lQGuDg6dA==",
+  "descricaoCifrada": {
+    "iv": "LpoJpnMFSlQT7t6S",
+    "dados": "DEGaZFkRok6HvvwGCiK+1JpWnsNbAPGo87goeOM="
+  }
+}

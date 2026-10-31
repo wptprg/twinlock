@@ -1,0 +1,153 @@
+# Twinlock
+
+**Sua frase de recuperação, cifrada. Um arquivo, duas chaves, sem internet.**
+
+O Twinlock é um único arquivo HTML que cifra as 12, 18 ou 24 palavras de uma carteira de
+criptomoedas (frase de recuperação BIP39) para que você possa guardá-las em qualquer lugar,
+num pen drive, numa gaveta, na nuvem, sem que ninguém consiga lê-las. Para ver as palavras
+de novo você precisa do arquivo, da página do Twinlock e de **duas chaves que só você conhece**.
+
+*Read it in [English](README.md).*
+
+---
+
+## Por quê
+
+Frase de recuperação escrita no papel é frágil: queima, apaga, perde, alguém fotografa.
+Placas de aço são melhores, mas continuam num único lugar físico. O Twinlock permite manter
+cópias cifradas em vários lugares, físicos ou virtuais, enquanto o que importa fica na sua
+cabeça: duas chaves.
+
+## Como funciona
+
+1. Você abre o `twinlock.html` no Chrome, Edge ou Firefox. **Nunca precisa de internet.**
+2. Escolhe uma pasta (um segundo pen drive, por exemplo) onde ficam os arquivos cifrados.
+3. Para cada carteira digita uma descrição curta, uma **chave de acesso**, uma
+   **chave de criptografia** e as palavras.
+4. O Twinlock deriva uma chave AES-256 a partir das suas duas chaves (PBKDF2, um milhão de
+   iterações) e grava um arquivo JSON pequeno por carteira. As palavras, e opcionalmente a
+   descrição, só existem nesse arquivo em forma cifrada. Suas chaves nunca são gravadas.
+5. Para ler uma carteira você clica no card, digita as duas chaves e as palavras aparecem,
+   uma por vez conforme passa o mouse, com trava automática depois de dois minutos.
+
+Quem achar o pen drive com o HTML vê um programa vazio. Quem achar os arquivos vê dados
+aleatórios. Quem achar os dois ainda precisa das suas duas chaves.
+
+## Começando
+
+1. Baixe o `twinlock.html` na [última release](https://github.com/wptprg/twinlock/releases/latest).
+2. **Confira o arquivo** (veja [Conferindo o download](#conferindo-o-download)).
+3. Copie para um pen drive ou qualquer pasta. Dê dois cliques. Ele abre no navegador.
+4. Clique em **Escolher pasta** e indique onde os arquivos cifrados devem ficar.
+5. Clique em **Nova carteira** e siga os três passos.
+
+O Twinlock lembra a pasta entre uma sessão e outra (só uma referência a ela, nunca o conteúdo).
+
+## Conferindo o download
+
+Toda release publica o SHA-256 do `twinlock.html`. Compare com o arquivo que você tem:
+
+```powershell
+# Windows (PowerShell)
+Get-FileHash twinlock.html -Algorithm SHA256
+```
+
+```bash
+# macOS
+shasum -a 256 twinlock.html
+```
+
+```bash
+# Linux
+sha256sum twinlock.html
+```
+
+Se o hash não bater com o das notas da release, **não use o arquivo**.
+As releases também são assinadas; veja nas notas a assinatura e a chave pública.
+
+O Twinlock é, de propósito, um único arquivo legível, sem minificação, sem etapa de build e
+sem dependências. Qualquer pessoa pode abri-lo num editor de texto e auditar as cerca de 600
+linhas de código. A própria página mostra a versão e o endereço oficial no rodapé.
+
+## Do que o Twinlock protege, e do que não protege
+
+**Protege contra**
+
+* Perda ou roubo dos arquivos: sem as duas chaves eles são inúteis.
+* Perda ou roubo do HTML: ele não contém nada seu.
+* Arquivos adulterados: qualquer alteração faz a decifragem falhar (autenticação AES-GCM).
+* Observação casual: as palavras ficam borradas e aparecem uma por vez; a tela trava sozinha.
+
+**Não protege contra**
+
+* **Esquecer uma chave.** Não existe recuperação. Nenhuma. Se precisar, anote uma dica para
+  você mesmo, nunca a chave em si junto dos arquivos.
+* Computador comprometido (keylogger, malware, captura de tela). Use uma máquina de confiança.
+* Chaves fracas quando os arquivos ficam na internet. Se qualquer um pode baixar seus arquivos,
+  pode testar chaves offline sem limite. Use chaves longas (20 ou mais caracteres somados) e
+  cifre a descrição.
+* Alguém que tenha as duas chaves. Mantenha-as separadas, e separadas dos arquivos.
+
+## Recuperando as palavras sem o Twinlock
+
+O formato do arquivo está totalmente documentado em [SPEC.md](SPEC.md) e usa só algoritmos
+padrão (PBKDF2-HMAC-SHA256 e AES-256-GCM). Se este projeto, o navegador ou o arquivo HTML
+desaparecerem um dia, você ainda recupera as palavras com algumas linhas de código:
+
+* [`tools/recover.mjs`](tools/recover.mjs): Node.js, sem dependências.
+* [`tools/recover.py`](tools/recover.py): Python 3 com o pacote `cryptography`.
+
+```bash
+node tools/recover.mjs c01.json
+```
+
+[`tools/sample-wallet.json`](tools/sample-wallet.json) é um arquivo público de teste; as chaves estão no SPEC.md.
+
+## Idiomas
+
+A interface existe em inglês, português e espanhol. Ela segue o idioma do navegador e pode
+ser trocada no menu do canto superior direito. As palavras em si são sempre em inglês, que é
+o que toda carteira de hardware e software usa.
+
+## Modo manual
+
+Firefox e Safari não deixam uma página gravar direto numa pasta. Nesses navegadores o Twinlock
+cai no modo manual: você carrega seus arquivos `.json` para ver os cards, e cada carteira nova é
+baixada para você mover ao lugar certo. Todo o resto é idêntico.
+
+## Perguntas frequentes
+
+**É seguro deixar os arquivos no Google Drive / iCloud / e-mail?**
+Mais seguro que papel, desde que suas chaves sejam fortes e você marque "Cifrar também a
+descrição". Leia acima a seção sobre do que o Twinlock não protege.
+
+**Posso guardar outra coisa além de uma frase BIP39?**
+Não na versão 1. O Twinlock valida as palavras contra a lista oficial BIP39 em inglês,
+inclusive o checksum, porque erro de digitação em frase de recuperação é o pior erro possível.
+
+**Por que duas chaves em vez de uma senha forte?**
+Porque as pessoas reutilizam senhas e as anotam. Duas chaves guardadas em lugares diferentes
+(uma decorada, outra num cartão no cofre, por exemplo) são mais difíceis de perder juntas.
+
+**A página envia alguma coisa para algum lugar?**
+Não. O arquivo tem uma Content-Security-Policy que proíbe todo acesso à rede, e você pode ler
+o código para confirmar que não há nenhuma chamada de rede nele. Funciona com o Wi-Fi desligado.
+
+**Por que não um aplicativo?**
+Aplicativo precisa ser instalado, atualizado e confiado. Um único arquivo HTML roda em qualquer
+computador com navegador, hoje e daqui a dez anos, e pode ser auditado por qualquer pessoa.
+
+## Apoie o projeto
+
+O Twinlock é gratuito e vai continuar gratuito. Se ele ajuda você, dá para apoiar a manutenção:
+
+* GitHub Sponsors: *em breve*
+* Bitcoin: *em breve*
+
+## Segurança
+
+Encontrou uma vulnerabilidade? Leia o [SECURITY.md](SECURITY.md).
+
+## Licença
+
+[MIT](LICENSE). Copyright © 2026 Waldir P Thomaz.
