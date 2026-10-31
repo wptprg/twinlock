@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Twinlock tutorial: download, verify, choose a folder, create and open an encrypted wallet, step by step.">
+<title>Twinlock, step by step</title>
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%90%3C/text%3E%3C/svg%3E">
+</head>
+<body data-pagina="tutorial">
+
+<nav class="topo">
+  <div class="wrap">
+    <a class="logo" href="index.html">🔐 Twinlock</a>
+    <div class="links">
+      <a href="index.html" data-i18n="tVoltar"></a>
+      <a data-repo="" href="https://github.com/wptprg/twinlock" data-i18n="navCodigo"></a>
+    </div>
+    <select class="idioma" aria-label="Language">
+      <option value="en">English</option>
+      <option value="pt-BR">Português</option>
+      <option value="es">Español</option>
+    </select>
+  </div>
+</nav>
+
+<main class="wrap tut" style="padding-top:40px;padding-bottom:60px;">
+  <h1 data-i18n="tTitulo" style="font-size:clamp(30px,4vw,42px);margin:0 0 10px;"></h1>
+  <p class="lead" data-i18n="tLead"></p>
+
+  <div class="passo-t">
+    <h2 data-i18n="t1T"></h2>
+    <p data-i18n="t1P"></p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 16px;">
+      <a class="btn primario" data-download href="https://github.com/wptprg/twinlock/releases/latest" data-i18n="btnBaixar"></a>
+    </div>
+    <div class="os">
+      <div><b data-i18n="verWin"></b><pre>Get-FileHash twinlock.html -Algorithm SHA256</pre></div>
+      <div><b data-i18n="verMac"></b><pre>shasum -a 256 twinlock.html</pre></div>
+      <div><b data-i18n="verLin"></b><pre>sha256sum twinlock.html</pre></div>
+    </div>
+    <div class="hash" style="margin-top:14px;"><span data-i18n="t1Ok"></span><br><code data-hash></code></div>
+    <div class="perigo-box" data-i18n="verAviso"></div>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t2T"></h2>
+    <p data-i18n="t2P"></p>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t3T"></h2>
+    <p data-i18n="t3P"></p>
+    <div class="moldura"><div class="barra"><i></i><i></i><i></i></div><img data-shot="home" alt="Step 3: choosing the folder" width="1280" height="820"></div>
+    <div class="aviso" data-i18n="t3Dica"></div>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t4T"></h2>
+    <p data-i18n="t4P"></p>
+    <div class="moldura"><div class="barra"><i></i><i></i><i></i></div><img data-shot="new1" alt="Step 4: name and keys" width="1280" height="820"></div>
+    <div class="aviso" data-i18n="t4Dica"></div>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t5T"></h2>
+    <p data-i18n="t5P"></p>
+    <div class="moldura"><div class="barra"><i></i><i></i><i></i></div><img data-shot="new2" alt="Step 5: the words" width="1280" height="820"></div>
+    <div class="aviso" data-i18n="t5Dica"></div>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t6T"></h2>
+    <p data-i18n="t6P"></p>
+    <div class="moldura"><div class="barra"><i></i><i></i><i></i></div><img data-shot="new3" alt="Step 6: review and save" width="1280" height="820"></div>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t7T"></h2>
+    <p data-i18n="t7P"></p>
+    <div class="moldura"><div class="barra"><i></i><i></i><i></i></div><img data-shot="keys" alt="Step 7: the two keys" width="1280" height="820"></div>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t8T"></h2>
+    <p data-i18n="t8P"></p>
+    <div class="moldura"><div class="barra"><i></i><i></i><i></i></div><img data-shot="open" alt="Step 8: reading the words" width="1280" height="820"></div>
+  </div>
+
+  <div class="passo-t">
+    <h2 data-i18n="t9T"></h2>
+    <ul>
+      <li data-i18n="t9L1"></li>
+      <li data-i18n="t9L2"></li>
+      <li data-i18n="t9L3"></li>
+      <li data-i18n="t9L4"></li>
+      <li data-i18n="t9L5"></li>
+    </ul>
+    <p style="font-size:14px;color:var(--texto-2);margin-top:24px;" data-i18n="tNota"></p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span data-i18n="rodLic"></span>
+    <span><a href="index.html" data-i18n="tVoltar"></a> · <a data-repo="" href="https://github.com/wptprg/twinlock">GitHub</a> · <span data-i18n="rodVersao"></span></span>
+  </div>
+</footer>
+
+<script src="site.js"></script>
+</body>
+</html>
