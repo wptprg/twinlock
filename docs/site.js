@@ -247,6 +247,16 @@ function aplicar() {
   document.querySelectorAll('select.idioma').forEach(s => { s.value = idioma; });
   const titulos = { en: 'Twinlock — your recovery phrase, encrypted', 'pt-BR': 'Twinlock — sua frase de recuperação, cifrada', es: 'Twinlock — tu frase de recuperación, cifrada' };
   if (document.body.dataset.pagina === 'index') document.title = titulos[idioma];
+  const descricoes = {
+    en: 'Twinlock: your crypto wallet recovery phrase, encrypted. One HTML file, two keys, no internet. Free and open source. Store 12, 18 or 24 BIP39 seed words safely.',
+    'pt-BR': 'Twinlock: a frase de recuperação da sua carteira de criptomoedas, cifrada. Um arquivo HTML, duas chaves, sem internet. Gratuito e de código aberto. Guarde as 12, 18 ou 24 palavras BIP39 com segurança.',
+    es: 'Twinlock: la frase de recuperación de tu billetera cripto, cifrada. Un archivo HTML, dos claves, sin internet. Gratuito y de código abierto. Guarda las 12, 18 o 24 palabras BIP39 con seguridad.'
+  };
+  if (document.body.dataset.pagina === 'index') {
+    const md = document.querySelector('meta[name="description"]'); if (md) md.content = descricoes[idioma];
+    const ot = document.querySelector('meta[property="og:title"]'); if (ot) ot.content = titulos[idioma];
+    const od = document.querySelector('meta[property="og:description"]'); if (od) od.content = descricoes[idioma];
+  }
   if (document.body.dataset.pagina === 'tutorial') document.title = t('tTitulo') + ' · Twinlock';
 }
 document.addEventListener('DOMContentLoaded', () => {

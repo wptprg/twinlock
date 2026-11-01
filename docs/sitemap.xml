@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://wptprg.github.io/twinlock/</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://wptprg.github.io/twinlock/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://wptprg.github.io/twinlock/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://wptprg.github.io/twinlock/?lang=pt-BR"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://wptprg.github.io/twinlock/?lang=es"/>
+  </url>
+  <url>
+    <loc>https://wptprg.github.io/twinlock/tutorial.html</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://wptprg.github.io/twinlock/tutorial.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://wptprg.github.io/twinlock/tutorial.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://wptprg.github.io/twinlock/tutorial.html?lang=pt-BR"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://wptprg.github.io/twinlock/tutorial.html?lang=es"/>
+  </url>
+</urlset>

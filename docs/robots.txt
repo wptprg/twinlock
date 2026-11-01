@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wptprg.github.io/twinlock/sitemap.xml
