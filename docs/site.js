@@ -5,6 +5,7 @@ const HASH = '0b436277ed61c4b2d9181bafc4f91b5e595a83468ebb89ced5ec35b848ee4b0d';
 const REPO = 'https://github.com/wptprg/twinlock';
 const DOWNLOAD = REPO + '/releases/download/v' + VERSAO + '/twinlock.html';
 // Donation addresses. The same values are in README.md and README.pt-BR.md; compare before sending.
+const GPG_FINGERPRINT = '7823 EC86 0CD1 CD49 7C9C  0B66 A98E 07B1 4154 21FF';
 const ENDERECOS = {
   btc: '14Udp9aA1woSDCQhcwKVDLricHRkr8yvy8',
   eth: '0xEd9BC7282a522879569dd7c670054ac8684a62Af'
@@ -45,6 +46,7 @@ const T = {
     f6b: 'Automated tests', f6s: '30 tests, including the official BIP39 vectors and the hash of the embedded word list.',
     verTitulo: 'Download and verify', verLead: 'Download only from the official release on GitHub. Then compare the hash of the file with the one published there. If it differs, delete the file.',
     verWin: 'Windows (PowerShell)', verMac: 'macOS', verLin: 'Linux',
+    verGpgT: 'Stronger: check the signature', verGpgP: 'Each release also ships SHA256SUMS.asc, signed with the project GPG key. The public key is in the repository and its fingerprint is:', verGpgOk: 'gpg --verify must say "Good signature" and show this fingerprint. Any other fingerprint means a different key: do not use the file.',
     verAviso: 'There is no "use Twinlock online" on purpose. A web page that asks for your words on someone else\'s server is not Twinlock, whatever it calls itself. Download the file, verify it, run it from your own computer.',
     recTitulo: 'Your words never depend on us', recLead: 'If this project, the browser or the HTML file disappear one day, you still get your words back. The file format is fully documented and uses only standard algorithms. Two small scripts, in Node.js and in Python, recover a wallet with nothing but the two keys.',
     recBtn: 'Read the format specification', recBtn2: 'Recovery scripts',
@@ -114,6 +116,7 @@ const T = {
     f6b: 'Testes automatizados', f6s: '30 testes, incluindo os vetores oficiais BIP39 e o hash da lista de palavras embutida.',
     verTitulo: 'Baixe e confira', verLead: 'Baixe somente da release oficial no GitHub. Depois compare o hash do arquivo com o publicado lá. Se for diferente, apague o arquivo.',
     verWin: 'Windows (PowerShell)', verMac: 'macOS', verLin: 'Linux',
+    verGpgT: 'Mais forte: confira a assinatura', verGpgP: 'Toda release também traz o SHA256SUMS.asc, assinado com a chave GPG do projeto. A chave pública está no repositório e a impressão digital dela é:', verGpgOk: 'O gpg --verify precisa dizer "Good signature" e mostrar esta impressão digital. Qualquer outra significa outra chave: não use o arquivo.',
     verAviso: 'Não existe "usar o Twinlock online", de propósito. Uma página que pede suas palavras no servidor de outra pessoa não é o Twinlock, seja qual for o nome que use. Baixe o arquivo, confira, rode no seu próprio computador.',
     recTitulo: 'Suas palavras nunca dependem de nós', recLead: 'Se este projeto, o navegador ou o arquivo HTML sumirem um dia, você ainda recupera as palavras. O formato do arquivo é totalmente documentado e usa só algoritmos padrão. Dois scripts pequenos, em Node.js e em Python, recuperam uma carteira com nada além das duas chaves.',
     recBtn: 'Ler a especificação do formato', recBtn2: 'Scripts de recuperação',
@@ -182,6 +185,7 @@ const T = {
     f6b: 'Pruebas automatizadas', f6s: '30 pruebas, incluidos los vectores oficiales BIP39 y el hash de la lista de palabras incrustada.',
     verTitulo: 'Descarga y verifica', verLead: 'Descarga solo desde la release oficial en GitHub. Luego compara el hash del archivo con el publicado allí. Si es distinto, borra el archivo.',
     verWin: 'Windows (PowerShell)', verMac: 'macOS', verLin: 'Linux',
+    verGpgT: 'Más fuerte: verifica la firma', verGpgP: 'Cada release también trae SHA256SUMS.asc, firmado con la clave GPG del proyecto. La clave pública está en el repositorio y su huella digital es:', verGpgOk: 'gpg --verify debe decir "Good signature" y mostrar esta huella digital. Cualquier otra significa otra clave: no uses el archivo.',
     verAviso: 'No existe "usar Twinlock en línea", a propósito. Una página que pide tus palabras en el servidor de otra persona no es Twinlock, se llame como se llame. Descarga el archivo, verifícalo, ejecútalo en tu propia computadora.',
     recTitulo: 'Tus palabras nunca dependen de nosotros', recLead: 'Si este proyecto, el navegador o el archivo HTML desaparecen algún día, igual recuperas tus palabras. El formato del archivo está completamente documentado y usa solo algoritmos estándar. Dos scripts pequeños, en Node.js y en Python, recuperan una billetera con nada más que las dos claves.',
     recBtn: 'Leer la especificación del formato', recBtn2: 'Scripts de recuperación',
@@ -236,6 +240,7 @@ function aplicar() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-shot]').forEach(img => { img.src = 'img/' + img.dataset.shot + '-' + idioma + '.png'; });
   document.querySelectorAll('[data-hash]').forEach(el => { el.textContent = HASH; });
+  document.querySelectorAll('[data-gpg]').forEach(el => { el.textContent = GPG_FINGERPRINT; });
   document.querySelectorAll('[data-download]').forEach(a => { a.href = DOWNLOAD; });
   document.querySelectorAll('[data-repo]').forEach(a => { a.href = REPO + (a.dataset.repo || ''); });
   document.querySelectorAll('[data-endereco]').forEach(el => { el.textContent = ENDERECOS[el.dataset.endereco] || ''; });

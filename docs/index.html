@@ -118,6 +118,15 @@
       <div><b data-i18n="verMac"></b><pre>shasum -a 256 twinlock.html</pre></div>
       <div><b data-i18n="verLin"></b><pre>sha256sum twinlock.html</pre></div>
     </div>
+    <div class="gpg">
+      <h3 data-i18n="verGpgT"></h3>
+      <p data-i18n="verGpgP"></p>
+      <code class="fp" data-gpg></code>
+      <pre>gpg --import twinlock-release-key.asc
+gpg --verify SHA256SUMS.asc SHA256SUMS</pre>
+      <p data-i18n="verGpgOk"></p>
+      <a data-repo="/blob/main/twinlock-release-key.asc" href="https://github.com/wptprg/twinlock/blob/main/twinlock-release-key.asc">twinlock-release-key.asc</a>
+    </div>
     <div class="perigo-box" data-i18n="verAviso"></div>
   </div>
 </section>

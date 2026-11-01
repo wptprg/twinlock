@@ -62,7 +62,24 @@ sha256sum twinlock.html
 ```
 
 If the hash does not match the one in the release notes, **do not use the file**.
-Releases are also signed; see the release notes for the signature and the public key.
+### Checking the signature (optional, stronger)
+
+Every release also ships `SHA256SUMS.asc`, a GPG signature of the hash file made with the
+project key. The public key is committed here as [`twinlock-release-key.asc`](twinlock-release-key.asc).
+Its fingerprint is:
+
+```
+7823 EC86 0CD1 CD49 7C9C  0B66 A98E 07B1 4154 21FF
+```
+
+```bash
+gpg --import twinlock-release-key.asc
+gpg --verify SHA256SUMS.asc SHA256SUMS
+sha256sum -c SHA256SUMS          # macOS: shasum -a 256 -c SHA256SUMS
+```
+
+`gpg --verify` must say "Good signature" and show the fingerprint above. A different
+fingerprint means a different key, not a different version: **do not use the file**.
 
 Twinlock is deliberately a single, readable, unminified file with no build step and no
 dependencies. Anyone can open it in a text editor and audit the roughly 600 lines of code.

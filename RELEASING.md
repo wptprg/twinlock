@@ -22,7 +22,41 @@ sha256sum twinlock.html > SHA256SUMS
 ## 3. Sign
 
 Use a GPG key that exists only for this project and whose public key is committed as
-`twinlock-release-key.asc` and shown in the release notes.
+`twinlock-release-key.asc` and shown in the release notes. Current key:
+
+```
+7823 EC86 0CD1 CD49 7C9C  0B66 A98E 07B1 4154 21FF
+```
+
+### Creating the key (done once)
+
+On Windows, `gpg` ships with Git for Windows but is not on the PATH of PowerShell. Either use
+Git Bash, or add it for the current window: `$env:Path += ";C:\Program Files\Git\usr\bin"`.
+Use `--output` instead of `>` for every export: PowerShell redirection writes a BOM, which
+corrupts `.asc` files.
+
+```bash
+gpg --full-generate-key                     # ECC (sign and encrypt), Curve 25519, 2y,
+                                            # name "Twinlock Release Key", strong passphrase
+gpg --list-secret-keys --keyid-format long  # note the id after "ed25519/"
+gpg --armor --output twinlock-release-key.asc --export <ID>
+gpg --armor --output /secure/offline/place/twinlock-release-key-PRIVATE.asc --export-secret-keys <ID>
+```
+
+Back up, offline and outside the repository: the private key export above and the revocation
+certificate GnuPG created in `~/.gnupg/openpgp-revocs.d/`. Then tell git to sign everything:
+
+```bash
+git config gpg.program "C:/Program Files/Git/usr/bin/gpg.exe"   # Windows only
+git config user.signingkey <ID>
+git config commit.gpgsign true
+git config tag.gpgsign true
+```
+
+Renew before the expiry date with `gpg --edit-key <ID>` then `expire`, re-export the public
+key and commit it; the fingerprint does not change.
+
+### Signing a release
 
 ```bash
 gpg --armor --detach-sign SHA256SUMS      # produces SHA256SUMS.asc

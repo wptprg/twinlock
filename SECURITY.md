@@ -35,5 +35,14 @@ scope: Twinlock cannot protect against either, and the README says so.
 
 Each release ships `twinlock.html`, a `SHA256SUMS` file and a detached signature.
 Check the hash as shown in the README, then verify the signature against the public key
-published in the release notes and in this repository. A file whose hash or signature does
-not match must be considered tampered with.
+published in the release notes and in this repository (`twinlock-release-key.asc`). A file
+whose hash or signature does not match must be considered tampered with.
+
+Project release key fingerprint:
+
+```
+7823 EC86 0CD1 CD49 7C9C  0B66 A98E 07B1 4154 21FF
+```
+
+If this key is ever compromised, a revocation will be published here and in the release notes,
+and the fingerprint of the replacement key will appear in both places.

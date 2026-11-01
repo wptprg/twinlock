@@ -63,7 +63,24 @@ sha256sum twinlock.html
 ```
 
 Se o hash não bater com o das notas da release, **não use o arquivo**.
-As releases também são assinadas; veja nas notas a assinatura e a chave pública.
+### Conferindo a assinatura (opcional, mais forte)
+
+Toda release também traz o `SHA256SUMS.asc`, uma assinatura GPG do arquivo de hash feita com
+a chave do projeto. A chave pública está neste repositório como
+[`twinlock-release-key.asc`](twinlock-release-key.asc). A impressão digital dela é:
+
+```
+7823 EC86 0CD1 CD49 7C9C  0B66 A98E 07B1 4154 21FF
+```
+
+```bash
+gpg --import twinlock-release-key.asc
+gpg --verify SHA256SUMS.asc SHA256SUMS
+sha256sum -c SHA256SUMS          # macOS: shasum -a 256 -c SHA256SUMS
+```
+
+O `gpg --verify` precisa dizer "Good signature" e mostrar a impressão digital acima. Uma
+impressão digital diferente significa outra chave, não outra versão: **não use o arquivo**.
 
 O Twinlock é, de propósito, um único arquivo legível, sem minificação, sem etapa de build e
 sem dependências. Qualquer pessoa pode abri-lo num editor de texto e auditar as cerca de 600
