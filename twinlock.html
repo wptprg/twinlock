@@ -728,7 +728,7 @@ const IDIOMAS = {
     cadernoSalvo: 'Book created as {nome}.', cadernoExcluido: 'Book deleted.', excluirCaderno: 'Delete book',
     buscarPlaceholder: 'Search service or user', acessosQtd: '{n} entries',
     semAcessos: 'No entries yet. Click "New entry" to add the first one.', nenhumResultado: 'Nothing matches "{q}".',
-    avisoCaderno: 'Hover a hidden value to see it (on a phone, touch and hold; with the keyboard, use Tab). "Copy" clears the clipboard after 20 seconds. The book locks itself when you switch tabs or after two minutes without activity; an entry being edited is lost then.',
+    avisoCaderno: 'Hover a hidden value to see it (on a phone, touch and hold; with the keyboard, use Tab). "Copy" clears the clipboard after 20 seconds. The book locks itself after ten minutes without activity; switching windows does not lock it. An entry being edited comes back after you unlock, except its stored password field.',
     novoAcesso: 'New entry', editarAcesso: 'Edit entry', salvarAcesso: 'Save entry', editar: 'Edit',
     servico: 'Service', servicoPlaceholder: 'e.g. Netflix', endereco: 'Address', enderecoPlaceholder: 'e.g. netflix.com',
     usuario: 'User or e-mail', codigoSenha: 'Password code', codigoPlaceholder: 'e.g. 4',
@@ -803,7 +803,7 @@ const IDIOMAS = {
     cadernoSalvo: 'Caderno criado em {nome}.', cadernoExcluido: 'Caderno excluído.', excluirCaderno: 'Excluir caderno',
     buscarPlaceholder: 'Buscar serviço ou usuário', acessosQtd: '{n} acesso(s)',
     semAcessos: 'Nenhum acesso ainda. Clique em "Novo acesso" para incluir o primeiro.', nenhumResultado: 'Nada encontrado para "{q}".',
-    avisoCaderno: 'Passe o mouse sobre um valor oculto para vê-lo (no celular, toque e segure; no teclado, use Tab). "Copiar" limpa a área de transferência após 20 segundos. O caderno trava sozinho ao trocar de aba ou após dois minutos sem atividade; um acesso em edição é perdido nesse caso.',
+    avisoCaderno: 'Passe o mouse sobre um valor oculto para vê-lo (no celular, toque e segure; no teclado, use Tab). "Copiar" limpa a área de transferência após 20 segundos. O caderno trava sozinho após dez minutos sem atividade; trocar de janela não tranca. Um acesso em edição volta depois de destravar, exceto o campo de senha guardada.',
     novoAcesso: 'Novo acesso', editarAcesso: 'Editar acesso', salvarAcesso: 'Salvar acesso', editar: 'Editar',
     servico: 'Serviço', servicoPlaceholder: 'Ex.: Netflix', endereco: 'Endereço', enderecoPlaceholder: 'Ex.: netflix.com',
     usuario: 'Usuário ou e-mail', codigoSenha: 'Código da senha', codigoPlaceholder: 'Ex.: 4',
@@ -878,7 +878,7 @@ const IDIOMAS = {
     cadernoSalvo: 'Libreta creada como {nome}.', cadernoExcluido: 'Libreta eliminada.', excluirCaderno: 'Eliminar libreta',
     buscarPlaceholder: 'Buscar servicio o usuario', acessosQtd: '{n} acceso(s)',
     semAcessos: 'Aún no hay accesos. Pulsa "Nuevo acceso" para añadir el primero.', nenhumResultado: 'Nada coincide con "{q}".',
-    avisoCaderno: 'Pasa el mouse sobre un valor oculto para verlo (en el móvil, toca y mantén; con el teclado, usa Tab). "Copiar" limpia el portapapeles tras 20 segundos. La libreta se bloquea sola al cambiar de pestaña o tras dos minutos sin actividad; un acceso en edición se pierde en ese caso.',
+    avisoCaderno: 'Pasa el mouse sobre un valor oculto para verlo (en el móvil, toca y mantén; con el teclado, usa Tab). "Copiar" limpia el portapapeles tras 20 segundos. La libreta se bloquea sola tras diez minutos sin actividad; cambiar de ventana no la bloquea. Un acceso en edición vuelve al desbloquear, salvo el campo de contraseña guardada.',
     novoAcesso: 'Nuevo acceso', editarAcesso: 'Editar acceso', salvarAcesso: 'Guardar acceso', editar: 'Editar',
     servico: 'Servicio', servicoPlaceholder: 'Ej.: Netflix', endereco: 'Dirección', enderecoPlaceholder: 'Ej.: netflix.com',
     usuario: 'Usuario o correo', codigoSenha: 'Código de la contraseña', codigoPlaceholder: 'Ej.: 4',
@@ -930,7 +930,8 @@ function aplicarIdioma() {
 //  Interface
 // =====================================================================
 const $ = (id) => document.getElementById(id);
-const TRAVA_MS = 2 * 60 * 1000;
+const TRAVA_MS = 2 * 60 * 1000;            // wallet: words hide after 2 min idle, or when the tab loses focus
+const TRAVA_CADERNO_MS = 10 * 60 * 1000;   // access book: locks after 10 min idle; switching windows is allowed
 const REVELAR_TODAS_MS = 30 * 1000;
 
 const estado = {
@@ -943,6 +944,7 @@ const estado = {
   chaveCaderno: null,   // its non-extractable AES key, while unlocked (re-encrypts on save)
   acessoEditando: null, // id of the entry in the form, null when creating
   acessoExpandido: null,
+  rascunho: null,       // entry form captured when the book locked mid-edit; restored on the next unlock
   novoTipo: 'carteira', // what the "new" dialog creates: 'carteira' | 'acessos'
   timerTrava: null,
   fimTrava: 0,
@@ -1544,8 +1546,11 @@ function limparExibicao() {
   ocultarTodas();
   $('abrirAcesso').value = ''; $('abrirCripto').value = '';
 }
+function tempoTrava() { return estado.acessos ? TRAVA_CADERNO_MS : TRAVA_MS; }
 function travarAgora(motivo) {
   if (!desbloqueado()) return;
+  // A book locking mid-edit keeps the draft (minus the stored password) for the next unlock.
+  if (estado.acessos && !$('abrirFormAcesso').hidden) estado.rascunho = { editando: estado.acessoEditando, ...lerFormAcesso(), senha: '' };
   limparExibicao();
   if (estado.aberta) $('abrirTitulo').textContent = rotuloCarteira(estado.aberta).texto;
   mostrarPainelChaves();
@@ -1553,7 +1558,7 @@ function travarAgora(motivo) {
 }
 function iniciarTrava() {
   pararTrava();
-  estado.fimTrava = Date.now() + TRAVA_MS;
+  estado.fimTrava = Date.now() + tempoTrava();
   estado.timerTrava = setInterval(() => {
     const resta = Math.max(0, estado.fimTrava - Date.now());
     const s = Math.ceil(resta / 1000);
@@ -1562,11 +1567,15 @@ function iniciarTrava() {
     if (resta <= 0) travarAgora(t('travaTempo'));
   }, 250);
 }
-function reiniciarTrava() { if (desbloqueado()) estado.fimTrava = Date.now() + TRAVA_MS; }
+function reiniciarTrava() { if (desbloqueado()) estado.fimTrava = Date.now() + tempoTrava(); }
 function pararTrava() { clearInterval(estado.timerTrava); estado.timerTrava = null; }
 ['mousemove', 'keydown', 'pointerdown', 'scroll'].forEach(ev => dlgAbrir.addEventListener(ev, reiniciarTrava, { passive: true }));
-document.addEventListener('visibilitychange', () => { if (document.hidden) travarAgora(t('travaFoco')); });
-dlgAbrir.addEventListener('close', () => { limparExibicao(); $('abrirTitulo').textContent = ''; estado.aberta = null; });
+// Losing focus hides the words at once. A book stays open (its secrets are blurred); coming back counts as activity.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (estado.palavrasAbertas) travarAgora(t('travaFoco')); }
+  else reiniciarTrava();
+});
+dlgAbrir.addEventListener('close', () => { limparExibicao(); estado.rascunho = null; $('abrirTitulo').textContent = ''; estado.aberta = null; });
 // Esc while editing an entry goes back to the list instead of closing the dialog.
 dlgAbrir.addEventListener('cancel', (e) => {
   if (!$('abrirFormAcesso').hidden) { e.preventDefault(); cancelarFormAcesso(); }
@@ -1597,6 +1606,11 @@ function mostrarCadernoAberto(acessos, descricao, chave) {
   renderizarAcessos();
   iniciarTrava();
   $('buscaAcessos').focus();
+  if (estado.rascunho) {
+    const r = estado.rascunho;
+    estado.rascunho = null;
+    abrirFormAcesso(r.editando ? acessos.find(a => a.id === r.editando) || null : null, r);
+  }
 }
 function mostrarPainelCaderno(qual) {   // 'lista' | 'form'
   const form = qual === 'form';
@@ -1725,14 +1739,15 @@ function limparFormAcesso() {
   $('acCampos').innerHTML = '';
   $('erroAcesso').hidden = true;
 }
-function abrirFormAcesso(a) {   // a = null → new entry
+function abrirFormAcesso(a, rascunho = null) {   // a = null → new entry; rascunho = draft to show instead of a's values
   limparFormAcesso();
   estado.acessoEditando = a ? a.id : null;
   $('formAcessoTitulo').textContent = t(a ? 'editarAcesso' : 'novoAcesso');
-  if (a) {
-    $('acServico').value = a.servico; $('acEndereco').value = a.endereco; $('acUsuario').value = a.usuario;
-    $('acCodigo').value = a.codigoSenha; $('acSenha').value = a.senha; $('acNotas').value = a.notas;
-    a.campos.forEach(adicionarLinhaCampo);
+  const v = rascunho || a;
+  if (v) {
+    $('acServico').value = v.servico; $('acEndereco').value = v.endereco; $('acUsuario').value = v.usuario;
+    $('acCodigo').value = v.codigoSenha; $('acSenha').value = v.senha; $('acNotas').value = v.notas;
+    v.campos.forEach(adicionarLinhaCampo);
   }
   mostrarPainelCaderno('form');
   $('acServico').focus();

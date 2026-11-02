@@ -8,7 +8,9 @@
   the AAD gets a suffix so wallets and books can never be misread as each other.
 * Book screen: search, expand, add, edit and delete entries; hidden values shown on hover,
   touch or Tab; "Copy" clears the clipboard after 20 seconds; the code badge tells how many
-  entries share the same password code; auto-lock as for words.
+  entries share the same password code. A book locks after ten minutes idle (words keep
+  two) and is not locked by switching windows; an entry being edited when it locks comes
+  back on the next unlock, minus its stored password field.
 * Saving a book re-encrypts it with the key kept in memory (fresh IV, no PBKDF2 again) and
   keeps the previous version as `<name>.json.bak`. Books are named `a01.json`, `a02.json`…
 * `tools/recover.mjs` and `tools/recover.py` also recover books. New public test vector

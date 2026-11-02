@@ -44,8 +44,9 @@ shown blurred, revealed on hover, and "Copy" clears the clipboard after 20 secon
 
 A book opens like a wallet, with its two keys, and shows a searchable list. Adding or editing
 an entry re-encrypts the whole file with a fresh nonce; the previous version is kept as
-`a01.json.bak`. The book locks itself after two minutes without activity or when the tab loses
-focus, exactly like the words. The file format is in [SPEC.md](SPEC.md#8-access-book--twinlock-acessos1).
+`a01.json.bak`. The book locks itself after ten minutes without activity; unlike the words,
+switching to another window does not lock it, since a book is consulted while you do something
+else, and its secrets stay blurred meanwhile. The file format is in [SPEC.md](SPEC.md#8-access-book--twinlock-acessos1).
 
 ## Quick start
 

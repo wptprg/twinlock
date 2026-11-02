@@ -45,8 +45,9 @@ pode guardar a senha no próprio acesso; ela aparece borrada, revela-se ao passa
 
 Um caderno abre como uma carteira, com as suas duas chaves, e mostra uma lista com busca.
 Incluir ou editar um acesso recifra o arquivo inteiro com um nonce novo; a versão anterior
-fica guardada como `a01.json.bak`. O caderno trava sozinho depois de dois minutos sem atividade
-ou quando a aba perde o foco, exatamente como as palavras. O formato do arquivo está no
+fica guardada como `a01.json.bak`. O caderno trava sozinho depois de dez minutos sem atividade;
+ao contrário das palavras, trocar de janela não tranca, porque um caderno é consultado enquanto
+você faz outra coisa, e os segredos continuam borrados nesse meio-tempo. O formato do arquivo está no
 [SPEC.md](SPEC.md#8-access-book--twinlock-acessos1).
 
 ## Começando
