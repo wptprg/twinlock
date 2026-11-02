@@ -1,7 +1,7 @@
 /* Twinlock website: translations and language switching. No external code, no tracking. */
 'use strict';
-const VERSAO = '1.0.0';
-const HASH = '0b436277ed61c4b2d9181bafc4f91b5e595a83468ebb89ced5ec35b848ee4b0d';
+const VERSAO = '1.1.0';
+const HASH = 'a3e3c60f23af5d3d06203c41d565a8ae0b9f3f072ef6dd6f658e1e4129cbdb6d';
 const REPO = 'https://github.com/wptprg/twinlock';
 const DOWNLOAD = REPO + '/releases/download/v' + VERSAO + '/twinlock.html';
 // Donation addresses. The same values are in README.md and README.pt-BR.md; compare before sending.
