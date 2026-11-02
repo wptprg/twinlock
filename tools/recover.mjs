@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Twinlock standalone recovery — recovers the words from a Twinlock file WITHOUT the HTML page.
+// Twinlock standalone recovery — recovers the words of a wallet, or the entries of an access book,
+// from a Twinlock file WITHOUT the HTML page.
 // Requirements: Node.js 18 or newer. No dependencies. Works offline.
 //
-//   node recover.mjs path/to/c01.json
+//   node recover.mjs path/to/c01.json        (wallet)
+//   node recover.mjs path/to/a01.json        (access book)
 //
 // The two keys are asked interactively and never echoed. For automated tests only, they may be
 // given through the environment variables TWINLOCK_ACCESS and TWINLOCK_ENCRYPTION.
@@ -53,17 +55,22 @@ function perguntarOculto(pergunta) {
   });
 }
 
+// Returns { tipo: 'carteira', descricao, palavras } for a wallet (twinlock/1)
+// or { tipo: 'acessos', descricao, acessos } for an access book (twinlock-acessos/1, SPEC.md §8).
 async function recuperar(arquivo, acesso, cripto) {
   const obj = JSON.parse(readFileSync(arquivo, 'utf8'));
-  if (!['twinlock/1', 'cofre/1'].includes(obj.formato)) throw new Error('Unknown format: ' + obj.formato);
+  const carteira = ['twinlock/1', 'cofre/1'].includes(obj.formato);
+  const caderno = obj.formato === 'twinlock-acessos/1';
+  if (!carteira && !caderno) throw new Error('Unknown format: ' + obj.formato);
   const it = obj.kdf.iteracoes;
   const verificador = await pbkdf2('acesso\u0000' + acesso, deB64(obj.saltVerificador), it);
   if (!igual(verificador, deB64(obj.verificador))) throw new Error('Wrong access key.');
   const bits = await pbkdf2('aes\u0000' + acesso + '\u0000' + cripto, deB64(obj.saltChave), it);
   const chave = await crypto.subtle.importKey('raw', bits, { name: 'AES-GCM' }, false, ['decrypt']);
+  const aad = obj.id + (caderno ? '\u0000acessos' : '');
   let texto, descricao = obj.descricao || '';
   try {
-    texto = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64(obj.iv), additionalData: utf8(obj.id) }, chave, deB64(obj.dados));
+    texto = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64(obj.iv), additionalData: utf8(aad) }, chave, deB64(obj.dados));
     if (obj.descricaoCifrada) {
       const d = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: deB64(obj.descricaoCifrada.iv), additionalData: utf8(obj.id + '\u0000descricao') },
@@ -73,22 +80,43 @@ async function recuperar(arquivo, acesso, cripto) {
   } catch {
     throw new Error('Wrong encryption key (or the file was modified).');
   }
-  return { descricao, palavras: new TextDecoder().decode(texto).split(' ') };
+  const plano = new TextDecoder().decode(texto);
+  if (caderno) return { tipo: 'acessos', descricao, acessos: JSON.parse(plano).acessos || [] };
+  return { tipo: 'carteira', descricao, palavras: plano.split(' ') };
+}
+
+function mostrarAcessos(acessos) {
+  const ordem = [...acessos].sort((a, b) => String(a.servico || '').localeCompare(String(b.servico || '')));
+  for (const a of ordem) {
+    console.log('* ' + (a.servico || '(no service)') + (a.endereco ? '  ' + a.endereco : ''));
+    if (a.usuario) console.log('    user:     ' + a.usuario);
+    if (a.codigoSenha) console.log('    password: #' + a.codigoSenha + '  (see your paper)');
+    if (a.senha) console.log('    password: ' + a.senha);
+    for (const c of a.campos || []) console.log('    ' + (c.nome || '?') + ': ' + (c.valor || ''));
+    if (a.notas) console.log('    notes:    ' + String(a.notas).replace(/\n/g, '\n              '));
+  }
 }
 
 const arquivo = process.argv[2];
 if (!arquivo) {
-  console.error('Usage: node recover.mjs <wallet.json>');
+  console.error('Usage: node recover.mjs <wallet.json | book.json>');
   process.exit(2);
 }
 const acesso = process.env.TWINLOCK_ACCESS ?? await perguntarOculto('Access key: ');
 const cripto = process.env.TWINLOCK_ENCRYPTION ?? await perguntarOculto('Encryption key: ');
 try {
-  const { descricao, palavras } = await recuperar(arquivo, acesso, cripto);
-  console.log('\nWallet: ' + (descricao || '(no description)'));
-  console.log(palavras.length + ' words:\n');
-  palavras.forEach((p, i) => console.log(String(i + 1).padStart(2, ' ') + '. ' + p));
-  console.log('\nClose this window when you are done. Do not leave the words on screen.');
+  const r = await recuperar(arquivo, acesso, cripto);
+  if (r.tipo === 'acessos') {
+    console.log('\nAccess book: ' + (r.descricao || '(no description)'));
+    console.log(r.acessos.length + ' entries:\n');
+    mostrarAcessos(r.acessos);
+    console.log('\nClose this window when you are done. Do not leave the list on screen.');
+  } else {
+    console.log('\nWallet: ' + (r.descricao || '(no description)'));
+    console.log(r.palavras.length + ' words:\n');
+    r.palavras.forEach((p, i) => console.log(String(i + 1).padStart(2, ' ') + '. ' + p));
+    console.log('\nClose this window when you are done. Do not leave the words on screen.');
+  }
 } catch (e) {
   console.error('\n' + e.message);
   process.exit(1);

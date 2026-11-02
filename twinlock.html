@@ -154,6 +154,38 @@
   .barra-trava { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--texto-2); }
   .barra-trava b { font-variant-numeric: tabular-nums; color: var(--texto); }
 
+  /* ---- access book ---- */
+  .status-palavras .entrada { flex: 1 1 200px; }
+  .status-palavras .entrada input { padding: 8px 12px; font-size: 15px; }
+  .lista-acessos { display: grid; gap: 8px; margin-top: 12px; }
+  .acesso { border: 1px solid var(--borda); border-radius: 10px; background: var(--fundo); }
+  .acesso .linha { display: flex; gap: 6px 10px; align-items: center; padding: 10px 12px; cursor: pointer; flex-wrap: wrap; border-radius: 10px; }
+  .acesso .linha:hover { background: color-mix(in srgb, var(--primaria) 6%, transparent); }
+  .acesso .linha:focus-visible { outline: 2px solid var(--primaria); outline-offset: -2px; }
+  .acesso .nome { font-weight: 600; word-break: break-word; }
+  .acesso .end { color: var(--texto-2); font-size: 13px; word-break: break-all; }
+  .acesso .usu { flex: 1 1 100%; color: var(--texto-2); font-size: 14px; word-break: break-all; }
+  .acesso .badges { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12px; border: 1px solid var(--borda); background: var(--superficie); white-space: nowrap; }
+  .badge.codigo { border-color: var(--primaria); color: var(--primaria); font-weight: 600; }
+  .acesso .detalhes { display: none; padding: 4px 12px 12px; border-top: 1px solid var(--borda); }
+  .acesso.aberto .detalhes { display: block; }
+  .detalhes .item { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-top: 8px; font-size: 14px; }
+  .detalhes .item b { color: var(--texto-2); font-weight: 600; font-size: 13px; min-width: 110px; }
+  .detalhes .item .valor { white-space: pre-wrap; word-break: break-word; }
+  .detalhes .datas { font-size: 12px; color: var(--texto-2); margin-top: 10px; }
+  .detalhes .acoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .segredo { font-family: ui-monospace, Consolas, monospace; filter: blur(6px); user-select: none; cursor: pointer; transition: filter .12s; padding: 0 4px; border-radius: 4px; touch-action: manipulation; -webkit-touch-callout: none; }
+  .segredo:hover, .segredo:focus-visible, .segredo.revelada { filter: none; user-select: text; }
+  .segredo:focus-visible { outline: 2px solid var(--primaria); }
+  textarea.area { width: 100%; border: 1px solid var(--borda); border-radius: 10px; background: var(--fundo); padding: 10px 12px; min-height: 76px; resize: vertical; outline: none; font: inherit; color: inherit; }
+  textarea.area:focus { border-color: var(--primaria); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primaria) 20%, transparent); }
+  .campo-extra { display: grid; grid-template-columns: 1fr 1.4fr auto auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .campo-extra .entrada input { padding: 8px 10px; font-size: 15px; }
+  .campo-extra label { display: flex; gap: 5px; align-items: center; font-size: 13px; color: var(--texto-2); cursor: pointer; white-space: nowrap; }
+  @media (max-width: 640px) { .campo-extra { grid-template-columns: 1fr 1fr; } }
+  .intro-caderno { border-left: 4px solid var(--primaria); background: color-mix(in srgb, var(--primaria) 8%, transparent); padding: 12px 14px; border-radius: 8px; margin: 0 0 16px; font-size: 14px; }
+
   #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--texto); color: var(--fundo); padding: 12px 18px; border-radius: 10px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: calc(100vw - 32px); font-size: 14px; z-index: 50; }
   #toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.erro { background: var(--perigo); color: #fff; }
@@ -222,11 +254,11 @@
 <!-- ============ NEW WALLET ============ -->
 <dialog id="dlgNova">
   <div class="dlg-cabecalho">
-    <h2 data-i18n="novaCarteira"></h2>
+    <h2 id="novaTitulo"></h2>
     <button class="btn pequeno" data-fechar="dlgNova" data-i18n-title="cancelar">✕</button>
   </div>
   <div class="dlg-corpo">
-    <div class="passos">
+    <div class="passos" id="passosNova">
       <span data-passo="1" class="ativo" data-i18n="passo1"></span>
       <span data-passo="2" data-i18n="passo2"></span>
       <span data-passo="3" data-i18n="passo3"></span>
@@ -234,9 +266,10 @@
 
     <!-- Step 1 -->
     <div id="passo1">
+      <p id="cadernoIntro" class="intro-caderno" hidden></p>
       <div class="campo">
         <label for="descricao" data-i18n="descricao"></label>
-        <div class="entrada"><input id="descricao" maxlength="20" autocomplete="off" spellcheck="false" data-i18n-placeholder="descricaoPlaceholder"></div>
+        <div class="entrada"><input id="descricao" maxlength="20" autocomplete="off" spellcheck="false"></div>
         <div class="contador"><span id="contDescricao">0</span>/20</div>
       </div>
       <div class="campo caixa">
@@ -281,7 +314,7 @@
         </div>
       </div>
       <div class="combinado" id="combinado"></div>
-      <div class="aviso" data-i18n="avisoChaves"></div>
+      <div class="aviso" id="avisoChavesNova"></div>
     </div>
 
     <!-- Step 2 -->
@@ -319,7 +352,7 @@
     <div class="direita">
       <button class="btn" data-fechar="dlgNova" data-i18n="cancelar"></button>
       <button id="btnContinuar" class="btn primario" disabled data-i18n="continuar"></button>
-      <button id="btnSalvar" class="btn primario" hidden data-i18n="salvar"></button>
+      <button id="btnSalvar" class="btn primario" hidden></button>
     </div>
   </div>
 </dialog>
@@ -354,12 +387,71 @@
       <div class="grade-palavras oculta" id="gradeAberta"></div>
       <div class="aviso" style="margin-top:16px;" data-i18n="avisoAberta"></div>
     </div>
+
+    <!-- Access book: list -->
+    <div id="abrirAcessos" hidden>
+      <div class="status-palavras" style="margin-top:0">
+        <div class="entrada"><input id="buscaAcessos" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="buscarPlaceholder"></div>
+        <span id="abrirQtdAcessos"></span>
+        <span class="barra-trava"><span data-i18n="travaEm"></span> <b class="contagem-trava">2:00</b></span>
+      </div>
+      <div class="lista-acessos" id="listaAcessos"></div>
+      <p id="vazioAcessos" class="dica" hidden style="margin-top:14px;"></p>
+      <div class="aviso" style="margin-top:16px;" data-i18n="avisoCaderno"></div>
+    </div>
+
+    <!-- Access book: entry form -->
+    <div id="abrirFormAcesso" hidden>
+      <div class="status-palavras" style="margin-top:0; margin-bottom:14px;">
+        <h3 id="formAcessoTitulo" style="margin:0; font-size:17px; color:var(--texto);"></h3>
+        <span class="barra-trava"><span data-i18n="travaEm"></span> <b class="contagem-trava">2:00</b></span>
+      </div>
+      <div class="duas-colunas">
+        <div class="campo">
+          <label for="acServico" data-i18n="servico"></label>
+          <div class="entrada"><input id="acServico" maxlength="60" autocomplete="off" data-i18n-placeholder="servicoPlaceholder"></div>
+        </div>
+        <div class="campo">
+          <label for="acEndereco" data-i18n="endereco"></label>
+          <div class="entrada"><input id="acEndereco" maxlength="200" autocomplete="off" spellcheck="false" data-i18n-placeholder="enderecoPlaceholder"></div>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="acUsuario" data-i18n="usuario"></label>
+        <div class="entrada"><input id="acUsuario" maxlength="200" autocomplete="off" spellcheck="false"></div>
+      </div>
+      <div class="duas-colunas">
+        <div class="campo">
+          <label for="acCodigo" data-i18n="codigoSenha"></label>
+          <div class="entrada"><input id="acCodigo" maxlength="30" autocomplete="off" spellcheck="false" data-i18n-placeholder="codigoPlaceholder"></div>
+          <div class="dica" data-i18n="codigoSenhaDica"></div>
+        </div>
+        <div class="campo">
+          <label for="acSenha" data-i18n="senhaGuardada"></label>
+          <div class="entrada"><input id="acSenha" type="password" maxlength="500" autocomplete="new-password" spellcheck="false"><button type="button" class="olho" data-olho="acSenha">👁</button></div>
+          <div class="dica" data-i18n="senhaGuardadaDica"></div>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="acNotas" data-i18n="notas"></label>
+        <textarea id="acNotas" class="area" rows="3" maxlength="4000" spellcheck="false"></textarea>
+      </div>
+      <div class="campo">
+        <label data-i18n="camposExtras"></label>
+        <div id="acCampos"></div>
+        <button type="button" id="btnAddCampo" class="btn pequeno" data-i18n="adicionarCampo"></button>
+      </div>
+      <div id="erroAcesso" class="erro-box" hidden></div>
+    </div>
   </div>
   <div class="dlg-rodape">
-    <button id="btnExcluir" class="btn perigo" hidden data-i18n="excluir"></button>
+    <button id="btnExcluir" class="btn perigo" hidden></button>
     <div class="direita">
       <button id="btnRevelar" class="btn" hidden></button>
-      <button class="btn" data-fechar="dlgAbrir" data-i18n="fechar"></button>
+      <button id="btnCancelarAcesso" class="btn" hidden data-i18n="cancelar"></button>
+      <button id="btnSalvarAcesso" class="btn primario" hidden data-i18n="salvarAcesso"></button>
+      <button id="btnFecharAbrir" class="btn" data-fechar="dlgAbrir" data-i18n="fechar"></button>
+      <button id="btnNovoAcesso" class="btn primario" hidden data-i18n="novoAcesso"></button>
       <button id="btnDesbloquear" class="btn primario" data-i18n="abrir"></button>
     </div>
   </div>
@@ -371,10 +463,12 @@
 'use strict';
 // ==== LOGICA ====
 // Pure logic, no DOM: cryptography and BIP39. Testable in Node by extracting this block. Documented in SPEC.md.
-const VERSAO = '1.0.0';
+const VERSAO = '1.1.0';
 const URL_OFICIAL = 'https://github.com/wptprg/twinlock';
 const FORMATO = 'twinlock/1';
 const FORMATOS_ACEITOS = ['twinlock/1', 'cofre/1'];   // cofre/1: pre-release format, same layout
+const FORMATO_ACESSOS = 'twinlock-acessos/1';         // access book: same container, JSON payload (SPEC.md §8)
+const AAD_ACESSOS = '\u0000acessos';                  // AAD suffix that keeps books and wallets apart
 const ITERACOES = 1000000;         // PBKDF2-SHA256 iterations for new files
 const MIN_ACESSO = 8;
 const MIN_CRIPTO = 12;
@@ -413,7 +507,9 @@ function igualConstante(a, b) {
   return dif === 0;
 }
 
-async function cifrarCarteira({ descricao, cifrarDescricao = false, palavras, acesso, cripto }, iteracoes = ITERACOES) {
+// ---- Generic container (SPEC.md §2-§3). A wallet and an access book differ only in
+// `formato`, in the plaintext and in the AAD suffix of `dados`. ----
+async function cifrarArquivo({ formato, descricao, cifrarDescricao = false, texto, aadSufixo = '', acesso, cripto }, iteracoes = ITERACOES) {
   const id = crypto.randomUUID();
   const saltVerificador = aleatorio(16);
   const saltChave = aleatorio(16);
@@ -421,9 +517,9 @@ async function cifrarCarteira({ descricao, cifrarDescricao = false, palavras, ac
   const verificador = await calcularVerificador(acesso, saltVerificador, iteracoes);
   const chave = await derivarChaveAes(acesso, cripto, saltChave, iteracoes);
   const dados = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv, additionalData: utf8(id) }, chave, utf8(palavras.join(' ')));
+    { name: 'AES-GCM', iv, additionalData: utf8(id + aadSufixo) }, chave, utf8(texto));
   const arquivo = {
-    formato: FORMATO,
+    formato,
     versao: VERSAO,
     id,
     descricao: cifrarDescricao ? '' : descricao,
@@ -441,16 +537,16 @@ async function cifrarCarteira({ descricao, cifrarDescricao = false, palavras, ac
       { name: 'AES-GCM', iv: ivDesc, additionalData: utf8(id + '\u0000descricao') }, chave, utf8(descricao));
     arquivo.descricaoCifrada = { iv: b64(ivDesc), dados: b64(dadosDesc) };
   }
-  return arquivo;
+  return { arquivo, chave };
 }
 
 class ErroCofre extends Error {
   constructor(codigo) { super(codigo); this.codigo = codigo; }   // codigo: FORMATO | ACESSO | CRIPTO
 }
 
-// Returns { palavras: string[], descricao: string }
-async function decifrarCarteira(obj, acesso, cripto) {
-  if (!obj || !FORMATOS_ACEITOS.includes(obj.formato) || !obj.kdf || !obj.dados) throw new ErroCofre('FORMATO');
+// Returns { texto, descricao, chave }. `chave` is the non-extractable AES key, needed only to re-encrypt a book.
+async function decifrarArquivo(obj, acesso, cripto, formatos, aadSufixo = '') {
+  if (!obj || !formatos.includes(obj.formato) || !obj.kdf || !obj.dados) throw new ErroCofre('FORMATO');
   const it = obj.kdf.iteracoes;
   const verificador = await calcularVerificador(acesso, deB64(obj.saltVerificador), it);
   if (!igualConstante(verificador, deB64(obj.verificador))) throw new ErroCofre('ACESSO');
@@ -458,7 +554,7 @@ async function decifrarCarteira(obj, acesso, cripto) {
   let texto, descricao = obj.descricao || '';
   try {
     texto = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: deB64(obj.iv), additionalData: utf8(obj.id) }, chave, deB64(obj.dados));
+      { name: 'AES-GCM', iv: deB64(obj.iv), additionalData: utf8(obj.id + aadSufixo) }, chave, deB64(obj.dados));
     if (obj.descricaoCifrada) {
       const d = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: deB64(obj.descricaoCifrada.iv), additionalData: utf8(obj.id + '\u0000descricao') },
@@ -468,7 +564,66 @@ async function decifrarCarteira(obj, acesso, cripto) {
   } catch {
     throw new ErroCofre('CRIPTO');
   }
-  return { palavras: new TextDecoder().decode(texto).split(' '), descricao };
+  return { texto: new TextDecoder().decode(texto), descricao, chave };
+}
+
+// ---- Wallet (twinlock/1) ----
+async function cifrarCarteira({ descricao, cifrarDescricao = false, palavras, acesso, cripto }, iteracoes = ITERACOES) {
+  const { arquivo } = await cifrarArquivo({ formato: FORMATO, descricao, cifrarDescricao, texto: palavras.join(' '), acesso, cripto }, iteracoes);
+  return arquivo;
+}
+// Returns { palavras: string[], descricao: string }
+async function decifrarCarteira(obj, acesso, cripto) {
+  const { texto, descricao } = await decifrarArquivo(obj, acesso, cripto, FORMATOS_ACEITOS);
+  return { palavras: texto.split(' '), descricao };
+}
+
+// ---- Access book (twinlock-acessos/1, SPEC.md §8) ----
+function ehCaderno(obj) { return !!obj && obj.formato === FORMATO_ACESSOS; }
+
+// Keeps only known entry fields with the right types; unknown fields are preserved.
+function normalizarAcesso(a) {
+  const texto = (v) => (v == null ? '' : String(v));
+  const campos = Array.isArray(a.campos)
+    ? a.campos.map(c => ({ nome: texto(c && c.nome), valor: texto(c && c.valor), oculto: !!(c && c.oculto) })).filter(c => c.nome || c.valor)
+    : [];
+  return {
+    ...a,
+    id: texto(a.id) || crypto.randomUUID(),
+    servico: texto(a.servico).trim(),
+    endereco: texto(a.endereco).trim(),
+    usuario: texto(a.usuario).trim(),
+    codigoSenha: texto(a.codigoSenha).trim(),
+    senha: texto(a.senha),
+    notas: texto(a.notas),
+    campos,
+  };
+}
+function serializarAcessos(acessos) { return JSON.stringify({ acessos: acessos.map(normalizarAcesso) }); }
+function desserializarAcessos(texto) {
+  let doc;
+  try { doc = JSON.parse(texto); } catch { throw new ErroCofre('FORMATO'); }
+  if (!doc || !Array.isArray(doc.acessos)) throw new ErroCofre('FORMATO');
+  return doc.acessos.filter(a => a && typeof a === 'object').map(normalizarAcesso);
+}
+
+// Returns { arquivo, chave }
+async function cifrarCaderno({ descricao, cifrarDescricao = false, acessos = [], acesso, cripto }, iteracoes = ITERACOES) {
+  const r = await cifrarArquivo({ formato: FORMATO_ACESSOS, descricao, cifrarDescricao, texto: serializarAcessos(acessos), aadSufixo: AAD_ACESSOS, acesso, cripto }, iteracoes);
+  r.arquivo.atualizadoEm = r.arquivo.criadoEm;
+  return r;
+}
+// Returns { acessos, descricao, chave }
+async function decifrarCaderno(obj, acesso, cripto) {
+  const { texto, descricao, chave } = await decifrarArquivo(obj, acesso, cripto, [FORMATO_ACESSOS], AAD_ACESSOS);
+  return { acessos: desserializarAcessos(texto), descricao, chave };
+}
+// Re-encrypts a book with the key kept in memory: fresh IV, same id/salts/verifier/label (SPEC.md §8.4).
+async function recifrarCaderno(obj, chave, acessos) {
+  const iv = aleatorio(12);
+  const dados = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv, additionalData: utf8(obj.id + AAD_ACESSOS) }, chave, utf8(serializarAcessos(acessos)));
+  return { ...obj, versao: VERSAO, atualizadoEm: new Date().toISOString(), iv: b64(iv), dados: b64(dados) };
 }
 
 // ---- BIP39 ----
@@ -561,9 +716,31 @@ const IDIOMAS = {
     travaTempo: 'Time is up: the words were hidden.', travaFoco: 'Tab lost focus: the words were hidden.',
     colarBloqueado: 'Pasting is blocked for safety. Type the words.',
     pastaErro: 'Could not open the folder: {erro}', permissaoNegada: 'Permission to the folder was denied.', pastaRelida: 'Folder re-read.',
-    carregadas: '{n} wallet(s) loaded.', semApiPasta: 'This browser cannot write directly to a folder; using manual mode.',
+    carregadas: '{n} file(s) loaded.', semApiPasta: 'This browser cannot write directly to a folder; using manual mode.',
     erroQtd: 'Invalid count: {n} words.', erroPalavra: 'Word not in the BIP39 list at position {pos}.',
     erroChecksum: 'Invalid checksum: some word is wrong or out of order.',
+    // access book
+    novoCaderno: 'New access book', cadernoCifrado: 'Encrypted book', criarCaderno: 'Create book',
+    cadernoIntro: 'An access book is one encrypted file holding your list of logins: service, user, which password to use, and notes. It opens with two keys, like a wallet. Twinlock suggests keeping the passwords themselves on paper, numbered, and writing only the number here.',
+    descricaoCadernoPlaceholder: 'e.g. Personal accounts',
+    avisoChavesCaderno: 'The two keys together generate the key that encrypts the book. Neither of them is stored anywhere. You will type them every time you open the book, so choose keys you can remember and keep them apart from the file.',
+    cadernoMeta: 'Access book · updated {data} · {nome}',
+    cadernoSalvo: 'Book created as {nome}.', cadernoExcluido: 'Book deleted.', excluirCaderno: 'Delete book',
+    buscarPlaceholder: 'Search service or user', acessosQtd: '{n} entries',
+    semAcessos: 'No entries yet. Click "New entry" to add the first one.', nenhumResultado: 'Nothing matches "{q}".',
+    avisoCaderno: 'Hover a hidden value to see it (on a phone, touch and hold; with the keyboard, use Tab). "Copy" clears the clipboard after 20 seconds. The book locks itself when you switch tabs or after two minutes without activity; an entry being edited is lost then.',
+    novoAcesso: 'New entry', editarAcesso: 'Edit entry', salvarAcesso: 'Save entry', editar: 'Edit',
+    servico: 'Service', servicoPlaceholder: 'e.g. Netflix', endereco: 'Address', enderecoPlaceholder: 'e.g. netflix.com',
+    usuario: 'User or e-mail', codigoSenha: 'Password code', codigoPlaceholder: 'e.g. 4',
+    codigoSenhaDica: 'Which password this account uses: the number of a line on your paper, for example. The file never contains the password itself.',
+    senhaGuardada: 'Stored password (optional)', senhaGuardadaDica: 'Only if you prefer to keep this password inside the file. Leave empty to rely on the code.',
+    notas: 'Notes', camposExtras: 'Extra fields', adicionarCampo: '+ Add field', campoNome: 'Name', campoValor: 'Value', campoOculto: 'Hidden', removerCampo: 'Remove field',
+    codigoBadge: 'password #{c}', codigoUsos: 'Code {c} is used by {n} entry(ies)', senhaBadge: 'stored password',
+    copiar: 'Copy', copiado: 'Copied. The clipboard will be cleared in {s} seconds.', copiarFalhou: 'Could not copy to the clipboard.',
+    excluirAcesso: 'Delete entry', excluirAcessoConfirma: 'Delete "{s}" from the book?', acessoExcluido: 'Entry deleted.',
+    acessoSalvo: 'Entry saved.', acessoSalvoDownload: 'Entry saved: file {nome} downloaded. Replace the previous one in your Twinlock folder.',
+    servicoObrigatorio: 'Type the name of the service.', erroSalvarCaderno: 'Could not save the book: {erro}',
+    acessoDatas: 'Created {c} · updated {u}',
   },
   'pt-BR': {
     slogan: 'sua frase de recuperação, cifrada. Um arquivo, duas chaves, sem internet.',
@@ -614,9 +791,31 @@ const IDIOMAS = {
     travaTempo: 'Tempo esgotado: as palavras foram ocultadas.', travaFoco: 'Aba saiu de foco: as palavras foram ocultadas.',
     colarBloqueado: 'Colar está bloqueado por segurança. Digite as palavras.',
     pastaErro: 'Não foi possível abrir a pasta: {erro}', permissaoNegada: 'Permissão negada para a pasta.', pastaRelida: 'Pasta relida.',
-    carregadas: '{n} carteira(s) carregada(s).', semApiPasta: 'Este navegador não permite gravar direto na pasta; usando o modo manual.',
+    carregadas: '{n} arquivo(s) carregado(s).', semApiPasta: 'Este navegador não permite gravar direto na pasta; usando o modo manual.',
     erroQtd: 'Quantidade inválida: {n} palavras.', erroPalavra: 'Palavra fora da lista BIP39 na posição {pos}.',
     erroChecksum: 'Checksum inválido: alguma palavra está errada ou fora de ordem.',
+    // caderno de acessos
+    novoCaderno: 'Novo caderno de acessos', cadernoCifrado: 'Caderno cifrado', criarCaderno: 'Criar caderno',
+    cadernoIntro: 'Um caderno de acessos é um único arquivo cifrado com a sua lista de logins: serviço, usuário, qual senha usar e anotações. Abre com duas chaves, como uma carteira. O Twinlock sugere manter as senhas em si num papel, numeradas, e anotar aqui só o número.',
+    descricaoCadernoPlaceholder: 'Ex.: Contas pessoais',
+    avisoChavesCaderno: 'As duas chaves, juntas, geram a chave que cifra o caderno. Nenhuma delas é gravada em lugar algum. Você vai digitá-las toda vez que abrir o caderno, então escolha chaves que consiga lembrar e guarde-as separadas do arquivo.',
+    cadernoMeta: 'Caderno de acessos · atualizado em {data} · {nome}',
+    cadernoSalvo: 'Caderno criado em {nome}.', cadernoExcluido: 'Caderno excluído.', excluirCaderno: 'Excluir caderno',
+    buscarPlaceholder: 'Buscar serviço ou usuário', acessosQtd: '{n} acesso(s)',
+    semAcessos: 'Nenhum acesso ainda. Clique em "Novo acesso" para incluir o primeiro.', nenhumResultado: 'Nada encontrado para "{q}".',
+    avisoCaderno: 'Passe o mouse sobre um valor oculto para vê-lo (no celular, toque e segure; no teclado, use Tab). "Copiar" limpa a área de transferência após 20 segundos. O caderno trava sozinho ao trocar de aba ou após dois minutos sem atividade; um acesso em edição é perdido nesse caso.',
+    novoAcesso: 'Novo acesso', editarAcesso: 'Editar acesso', salvarAcesso: 'Salvar acesso', editar: 'Editar',
+    servico: 'Serviço', servicoPlaceholder: 'Ex.: Netflix', endereco: 'Endereço', enderecoPlaceholder: 'Ex.: netflix.com',
+    usuario: 'Usuário ou e-mail', codigoSenha: 'Código da senha', codigoPlaceholder: 'Ex.: 4',
+    codigoSenhaDica: 'Qual senha esta conta usa: o número de uma linha do seu papel, por exemplo. O arquivo nunca contém a senha em si.',
+    senhaGuardada: 'Senha guardada (opcional)', senhaGuardadaDica: 'Só se preferir manter esta senha dentro do arquivo. Deixe vazio para usar apenas o código.',
+    notas: 'Anotações', camposExtras: 'Campos extras', adicionarCampo: '+ Adicionar campo', campoNome: 'Nome', campoValor: 'Valor', campoOculto: 'Oculto', removerCampo: 'Remover campo',
+    codigoBadge: 'senha nº {c}', codigoUsos: 'Código {c} usado em {n} acesso(s)', senhaBadge: 'senha guardada',
+    copiar: 'Copiar', copiado: 'Copiado. A área de transferência será limpa em {s} segundos.', copiarFalhou: 'Não foi possível copiar para a área de transferência.',
+    excluirAcesso: 'Excluir acesso', excluirAcessoConfirma: 'Excluir "{s}" do caderno?', acessoExcluido: 'Acesso excluído.',
+    acessoSalvo: 'Acesso salvo.', acessoSalvoDownload: 'Acesso salvo: arquivo {nome} baixado. Substitua o anterior na sua pasta do Twinlock.',
+    servicoObrigatorio: 'Digite o nome do serviço.', erroSalvarCaderno: 'Não foi possível salvar o caderno: {erro}',
+    acessoDatas: 'Criado em {c} · atualizado em {u}',
   },
   es: {
     slogan: 'tu frase de recuperación, cifrada. Un archivo, dos claves, sin internet.',
@@ -667,9 +866,31 @@ const IDIOMAS = {
     travaTempo: 'Tiempo agotado: las palabras se ocultaron.', travaFoco: 'La pestaña perdió el foco: las palabras se ocultaron.',
     colarBloqueado: 'Pegar está bloqueado por seguridad. Escribe las palabras.',
     pastaErro: 'No se pudo abrir la carpeta: {erro}', permissaoNegada: 'Permiso denegado para la carpeta.', pastaRelida: 'Carpeta releída.',
-    carregadas: '{n} billetera(s) cargada(s).', semApiPasta: 'Este navegador no permite escribir directamente en la carpeta; usando el modo manual.',
+    carregadas: '{n} archivo(s) cargado(s).', semApiPasta: 'Este navegador no permite escribir directamente en la carpeta; usando el modo manual.',
     erroQtd: 'Cantidad inválida: {n} palabras.', erroPalavra: 'Palabra fuera de la lista BIP39 en la posición {pos}.',
     erroChecksum: 'Checksum inválido: alguna palabra está mal o fuera de orden.',
+    // libreta de accesos
+    novoCaderno: 'Nueva libreta de accesos', cadernoCifrado: 'Libreta cifrada', criarCaderno: 'Crear libreta',
+    cadernoIntro: 'Una libreta de accesos es un único archivo cifrado con tu lista de inicios de sesión: servicio, usuario, qué contraseña usar y notas. Se abre con dos claves, como una billetera. Twinlock sugiere guardar las contraseñas en papel, numeradas, y anotar aquí solo el número.',
+    descricaoCadernoPlaceholder: 'Ej.: Cuentas personales',
+    avisoChavesCaderno: 'Las dos claves juntas generan la clave que cifra la libreta. Ninguna se guarda en ningún lugar. Las escribirás cada vez que abras la libreta, así que elige claves que puedas recordar y consérvalas separadas del archivo.',
+    cadernoMeta: 'Libreta de accesos · actualizada el {data} · {nome}',
+    cadernoSalvo: 'Libreta creada como {nome}.', cadernoExcluido: 'Libreta eliminada.', excluirCaderno: 'Eliminar libreta',
+    buscarPlaceholder: 'Buscar servicio o usuario', acessosQtd: '{n} acceso(s)',
+    semAcessos: 'Aún no hay accesos. Pulsa "Nuevo acceso" para añadir el primero.', nenhumResultado: 'Nada coincide con "{q}".',
+    avisoCaderno: 'Pasa el mouse sobre un valor oculto para verlo (en el móvil, toca y mantén; con el teclado, usa Tab). "Copiar" limpia el portapapeles tras 20 segundos. La libreta se bloquea sola al cambiar de pestaña o tras dos minutos sin actividad; un acceso en edición se pierde en ese caso.',
+    novoAcesso: 'Nuevo acceso', editarAcesso: 'Editar acceso', salvarAcesso: 'Guardar acceso', editar: 'Editar',
+    servico: 'Servicio', servicoPlaceholder: 'Ej.: Netflix', endereco: 'Dirección', enderecoPlaceholder: 'Ej.: netflix.com',
+    usuario: 'Usuario o correo', codigoSenha: 'Código de la contraseña', codigoPlaceholder: 'Ej.: 4',
+    codigoSenhaDica: 'Qué contraseña usa esta cuenta: el número de una línea de tu papel, por ejemplo. El archivo nunca contiene la contraseña en sí.',
+    senhaGuardada: 'Contraseña guardada (opcional)', senhaGuardadaDica: 'Solo si prefieres mantener esta contraseña dentro del archivo. Déjalo vacío para usar solo el código.',
+    notas: 'Notas', camposExtras: 'Campos extra', adicionarCampo: '+ Añadir campo', campoNome: 'Nombre', campoValor: 'Valor', campoOculto: 'Oculto', removerCampo: 'Quitar campo',
+    codigoBadge: 'contraseña n.º {c}', codigoUsos: 'Código {c} usado en {n} acceso(s)', senhaBadge: 'contraseña guardada',
+    copiar: 'Copiar', copiado: 'Copiado. El portapapeles se limpiará en {s} segundos.', copiarFalhou: 'No se pudo copiar al portapapeles.',
+    excluirAcesso: 'Eliminar acceso', excluirAcessoConfirma: '¿Eliminar "{s}" de la libreta?', acessoExcluido: 'Acceso eliminado.',
+    acessoSalvo: 'Acceso guardado.', acessoSalvoDownload: 'Acceso guardado: archivo {nome} descargado. Reemplaza el anterior en tu carpeta de Twinlock.',
+    servicoObrigatorio: 'Escribe el nombre del servicio.', erroSalvarCaderno: 'No se pudo guardar la libreta: {erro}',
+    acessoDatas: 'Creado el {c} · actualizado el {u}',
   },
 };
 function detectarIdioma() {
@@ -697,8 +918,12 @@ function aplicarIdioma() {
   $('btnRecarregar').title = t('recarregar');
   atualizarChipPasta();
   if (estado.modo) renderizarCards();
-  if (dlgNova.open) { atualizarPasso1(); atualizarPasso2(); }
-  if (dlgAbrir.open) { $('btnRevelar').textContent = $('gradeAberta').classList.contains('oculta') ? t('revelarTodas') : t('ocultarTodas'); }
+  if (dlgNova.open) { configurarDialogoNovo(); atualizarPasso1(); atualizarPasso2(); }
+  if (dlgAbrir.open) {
+    $('btnRevelar').textContent = $('gradeAberta').classList.contains('oculta') ? t('revelarTodas') : t('ocultarTodas');
+    if (estado.aberta) $('btnExcluir').textContent = t(ehCaderno(estado.aberta.obj) ? 'excluirCaderno' : 'excluir');
+    if (estado.acessos) { renderizarAcessos(); $('formAcessoTitulo').textContent = t(estado.acessoEditando ? 'editarAcesso' : 'novoAcesso'); }
+  }
 }
 
 // =====================================================================
@@ -711,9 +936,14 @@ const REVELAR_TODAS_MS = 30 * 1000;
 const estado = {
   modo: null,           // 'pasta' | 'manual'
   pasta: null,          // FileSystemDirectoryHandle
-  carteiras: [],        // [{ nome, obj }]
+  carteiras: [],        // [{ nome, obj }]  wallets and access books, told apart by obj.formato
   aberta: null,
   palavrasAbertas: null,
+  acessos: null,        // entries of the open access book, while unlocked
+  chaveCaderno: null,   // its non-extractable AES key, while unlocked (re-encrypts on save)
+  acessoEditando: null, // id of the entry in the form, null when creating
+  acessoExpandido: null,
+  novoTipo: 'carteira', // what the "new" dialog creates: 'carteira' | 'acessos'
   timerTrava: null,
   fimTrava: 0,
   passo: 1,
@@ -746,8 +976,14 @@ function mensagemErroCofre(e) {
   return (e && e.message) || String(e);
 }
 function rotuloCarteira(c) {
-  if (c.obj.descricaoCifrada && !c.obj.descricao) return { texto: t('carteiraCifrada'), cifrada: true };
+  if (c.obj.descricaoCifrada && !c.obj.descricao) return { texto: t(ehCaderno(c.obj) ? 'cadernoCifrado' : 'carteiraCifrada'), cifrada: true };
   return { texto: c.obj.descricao || t('semDescricao'), cifrada: false };
+}
+function arquivoAceito(obj) { return !!obj && (FORMATOS_ACEITOS.includes(obj.formato) || ehCaderno(obj)); }
+// Books first (used daily), then wallets; each group by creation date.
+function ordenarArquivos(lista) {
+  lista.sort((a, b) => (ehCaderno(b.obj) - ehCaderno(a.obj)) || String(a.obj.criadoEm).localeCompare(String(b.obj.criadoEm)));
+  return lista;
 }
 
 // ---------- IndexedDB: remembers the chosen folder (a handle, never data) ----------
@@ -826,43 +1062,64 @@ async function carregarCarteiras() {
     if (h.kind !== 'file' || !nome.toLowerCase().endsWith('.json')) continue;
     try {
       const obj = JSON.parse(await (await h.getFile()).text());
-      if (obj && FORMATOS_ACEITOS.includes(obj.formato)) lista.push({ nome, obj });
+      if (arquivoAceito(obj)) lista.push({ nome, obj });
     } catch { /* some other file */ }
   }
-  lista.sort((a, b) => String(a.obj.criadoEm).localeCompare(String(b.obj.criadoEm)));
-  estado.carteiras = lista;
+  estado.carteiras = ordenarArquivos(lista);
   renderizarCards();
 }
-function proximoNomeArquivo() {
+// Wallets are c01.json, c02.json…; access books are a01.json, a02.json…
+function proximoNomeArquivo(prefixo) {
   const usados = new Set(estado.carteiras.map(c => c.nome.toLowerCase()));
   for (let i = 1; i < 1000; i++) {
-    const nome = 'c' + String(i).padStart(2, '0') + '.json';
+    const nome = prefixo + String(i).padStart(2, '0') + '.json';
     if (!usados.has(nome)) return nome;
   }
-  return 'c' + Date.now() + '.json';
+  return prefixo + Date.now() + '.json';
 }
-async function gravarCarteira(obj) {
-  const nome = proximoNomeArquivo();
+async function escreverArquivo(nome, conteudo) {
+  const fh = await estado.pasta.getFileHandle(nome, { create: true });
+  const w = await fh.createWritable();
+  await w.write(conteudo);
+  await w.close();
+}
+function baixarArquivo(nome, conteudo) {
+  const blob = new Blob([conteudo], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+// Writes a brand-new file and returns its card item { nome, obj }.
+async function gravarNovoArquivo(obj, prefixo) {
+  const nome = proximoNomeArquivo(prefixo);
   const conteudo = JSON.stringify(obj, null, 2);
-  if (estado.modo === 'pasta') {
-    const fh = await estado.pasta.getFileHandle(nome, { create: true });
-    const w = await fh.createWritable();
-    await w.write(conteudo);
-    await w.close();
-  } else {
-    const blob = new Blob([conteudo], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-  }
-  estado.carteiras.push({ nome, obj });
-  estado.carteiras.sort((a, b) => String(a.obj.criadoEm).localeCompare(String(b.obj.criadoEm)));
+  if (estado.modo === 'pasta') await escreverArquivo(nome, conteudo);
+  else baixarArquivo(nome, conteudo);
+  const item = { nome, obj };
+  estado.carteiras.push(item);
+  ordenarArquivos(estado.carteiras);
   renderizarCards();
-  return nome;
+  return item;
+}
+const gravarCarteira = (obj) => gravarNovoArquivo(obj, 'c').then(i => i.nome);
+// Overwrites an existing file (access books only). The previous content goes to <nome>.bak first (SPEC.md §8.4).
+async function regravarArquivo(item, novoObj) {
+  const conteudo = JSON.stringify(novoObj, null, 2);
+  if (estado.modo === 'pasta') {
+    try { await escreverArquivo(item.nome + '.bak', JSON.stringify(item.obj, null, 2)); } catch { /* the main write below decides */ }
+    await escreverArquivo(item.nome, conteudo);
+  } else {
+    baixarArquivo(item.nome, conteudo);
+  }
+  item.obj = novoObj;
+  renderizarCards();
 }
 async function excluirCarteira(carteira) {
-  if (estado.modo === 'pasta') await estado.pasta.removeEntry(carteira.nome);
+  if (estado.modo === 'pasta') {
+    await estado.pasta.removeEntry(carteira.nome);
+    if (ehCaderno(carteira.obj)) { try { await estado.pasta.removeEntry(carteira.nome + '.bak'); } catch { /* no backup */ } }
+  }
   estado.carteiras = estado.carteiras.filter(c => c !== carteira);
   renderizarCards();
 }
@@ -881,11 +1138,10 @@ async function carregarArquivosManuais(files) {
   for (const f of files) {
     try {
       const obj = JSON.parse(await f.text());
-      if (obj && FORMATOS_ACEITOS.includes(obj.formato)) lista.push({ nome: f.name, obj });
+      if (arquivoAceito(obj)) lista.push({ nome: f.name, obj });
     } catch { /* ignore */ }
   }
-  lista.sort((a, b) => String(a.obj.criadoEm).localeCompare(String(b.obj.criadoEm)));
-  estado.carteiras = lista;
+  estado.carteiras = ordenarArquivos(lista);
   renderizarCards();
   toast(t('carregadas', { n: lista.length }));
 }
@@ -896,24 +1152,30 @@ function renderizarCards() {
   const grade = $('gradeCards');
   grade.innerHTML = '';
   for (const c of estado.carteiras) {
+    const caderno = ehCaderno(c.obj);
     const b = document.createElement('button');
     b.className = 'card';
     b.type = 'button';
-    b.innerHTML = `<div class="titulo">🔒 <span></span></div><div class="meta"></div>`;
+    b.innerHTML = `<div class="titulo"><span class="icone"></span> <span></span></div><div class="meta"></div>`;
     const r = rotuloCarteira(c);
-    b.querySelector('.titulo span').textContent = r.texto;
+    b.querySelector('.icone').textContent = caderno ? '📒' : '🔒';
+    b.querySelector('.titulo span + span').textContent = r.texto;
     if (r.cifrada) b.querySelector('.titulo').classList.add('cifrada');
-    b.querySelector('.meta').textContent = t('criadaEm', { data: formatarData(c.obj.criadoEm), nome: c.nome });
+    b.querySelector('.meta').textContent = caderno
+      ? t('cadernoMeta', { data: formatarData(c.obj.atualizadoEm || c.obj.criadoEm), nome: c.nome })
+      : t('criadaEm', { data: formatarData(c.obj.criadoEm), nome: c.nome });
     b.addEventListener('click', () => abrirCarteira(c));
     grade.appendChild(b);
   }
-  const nova = document.createElement('button');
-  nova.className = 'card nova';
-  nova.type = 'button';
-  nova.innerHTML = '<span class="mais">+</span><span></span>';
-  nova.querySelector('span + span').textContent = t('novaCarteira');
-  nova.addEventListener('click', iniciarNova);
-  grade.appendChild(nova);
+  for (const [tipo, chave] of [['carteira', 'novaCarteira'], ['acessos', 'novoCaderno']]) {
+    const nova = document.createElement('button');
+    nova.className = 'card nova';
+    nova.type = 'button';
+    nova.innerHTML = '<span class="mais">+</span><span></span>';
+    nova.querySelector('span + span').textContent = t(chave);
+    nova.addEventListener('click', () => iniciarNova(tipo));
+    grade.appendChild(nova);
+  }
 }
 
 // ---------- show/hide password, close buttons ----------
@@ -933,13 +1195,26 @@ document.querySelectorAll('[data-fechar]').forEach(btn => {
 // =====================================================================
 const camposChave = ['acesso', 'acesso2', 'cripto', 'cripto2'];
 
-function iniciarNova() {
+function iniciarNova(tipo = 'carteira') {
+  estado.novoTipo = tipo;
   limparNova();
   mostrarPasso(1);
   dlgNova.showModal();
   $('descricao').focus();
 }
+// The same dialog creates wallets (three steps) and access books (step 1 only: label and keys).
+function configurarDialogoNovo() {
+  const caderno = estado.novoTipo === 'acessos';
+  $('novaTitulo').textContent = t(caderno ? 'novoCaderno' : 'novaCarteira');
+  $('cadernoIntro').hidden = !caderno;
+  $('cadernoIntro').textContent = t('cadernoIntro');
+  $('passosNova').hidden = caderno;
+  $('descricao').placeholder = t(caderno ? 'descricaoCadernoPlaceholder' : 'descricaoPlaceholder');
+  $('avisoChavesNova').textContent = t(caderno ? 'avisoChavesCaderno' : 'avisoChaves');
+  $('btnSalvar').textContent = t(caderno ? 'criarCaderno' : 'salvar');
+}
 function limparNova() {
+  configurarDialogoNovo();
   $('descricao').value = '';
   $('cifrarDescricao').checked = false;
   camposChave.forEach(id => { const i = $(id); i.value = ''; i.type = 'password'; });
@@ -950,6 +1225,7 @@ function limparNova() {
   atualizarPasso1();
 }
 function mostrarPasso(n) {
+  const caderno = estado.novoTipo === 'acessos';
   estado.passo = n;
   for (let i = 1; i <= 3; i++) {
     $('passo' + i).hidden = i !== n;
@@ -957,8 +1233,8 @@ function mostrarPasso(n) {
     s.className = i === n ? 'ativo' : (i < n ? 'feito' : '');
   }
   $('btnVoltar').hidden = n === 1;
-  $('btnContinuar').hidden = n === 3;
-  $('btnSalvar').hidden = n !== 3;
+  $('btnContinuar').hidden = caderno || n === 3;
+  $('btnSalvar').hidden = caderno ? false : n !== 3;
   if (n === 1) atualizarPasso1();
   if (n === 2) { atualizarPasso2(); const primeiro = $('gradeEntrada').querySelector('input'); if (primeiro) primeiro.focus(); }
 }
@@ -989,7 +1265,10 @@ function atualizarPasso1() {
   comb.textContent = t('combinado', { n: soma, min: COMBINADO_RECOMENDADO });
   comb.classList.toggle('ok', soma >= COMBINADO_RECOMENDADO);
   const tudo = desc.length > 0 && desc.length <= MAX_DESCRICAO && okA && okA2 && okC1 && okC2 && okC3 && okC4;
-  if (estado.passo === 1) $('btnContinuar').disabled = !tudo;
+  if (estado.passo === 1) {
+    $('btnContinuar').disabled = !tudo;
+    if (estado.novoTipo === 'acessos') $('btnSalvar').disabled = !tudo;
+  }
   return tudo;
 }
 ['descricao', ...camposChave].forEach(id => $(id).addEventListener('input', atualizarPasso1));
@@ -1111,16 +1390,24 @@ $('btnSalvar').addEventListener('click', async () => {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> ' + t('salvando');
   try {
+    const descricao = $('descricao').value.trim().slice(0, MAX_DESCRICAO);
+    const cifrarDescricao = $('cifrarDescricao').checked;
+    const acesso = $('acesso').value, cripto = $('cripto').value;
+    if (estado.novoTipo === 'acessos') {
+      if (!atualizarPasso1()) throw new Error(t('erroFormato'));
+      const { arquivo, chave } = await cifrarCaderno({ descricao, cifrarDescricao, acessos: [], acesso, cripto });
+      const item = await gravarNovoArquivo(arquivo, 'a');
+      limparNova();
+      dlgNova.close();
+      toast(t(estado.modo === 'pasta' ? 'cadernoSalvo' : 'salvoDownload', { nome: item.nome }));
+      abrirCarteira(item);                       // open it right away, with the key just derived
+      mostrarCadernoAberto([], cifrarDescricao ? descricao : '', chave);
+      return;
+    }
     const palavras = palavrasDigitadas();
     const r = await validarFrase(palavras);
     if (!r.ok) throw new Error(mensagemValidacao(r));
-    const obj = await cifrarCarteira({
-      descricao: $('descricao').value.trim().slice(0, MAX_DESCRICAO),
-      cifrarDescricao: $('cifrarDescricao').checked,
-      palavras,
-      acesso: $('acesso').value,
-      cripto: $('cripto').value,
-    });
+    const obj = await cifrarCarteira({ descricao, cifrarDescricao, palavras, acesso, cripto });
     const nome = await gravarCarteira(obj);
     limparNova();
     dlgNova.close();
@@ -1130,7 +1417,7 @@ $('btnSalvar').addEventListener('click', async () => {
     erro.hidden = false;
   } finally {
     btn.disabled = false;
-    btn.textContent = t('salvar');
+    btn.textContent = t(estado.novoTipo === 'acessos' ? 'criarCaderno' : 'salvar');
   }
 });
 dlgNova.addEventListener('close', limparNova);
@@ -1138,6 +1425,16 @@ dlgNova.addEventListener('close', limparNova);
 // =====================================================================
 //  Open wallet
 // =====================================================================
+// Puts the open dialog back in its "type the keys" state (used on open and on lock).
+function mostrarPainelChaves() {
+  $('abrirChaves').hidden = false;
+  $('abrirPalavras').hidden = true;
+  $('abrirAcessos').hidden = true;
+  $('abrirFormAcesso').hidden = true;
+  $('btnDesbloquear').hidden = false;
+  $('btnFecharAbrir').hidden = false;
+  ['btnRevelar', 'btnExcluir', 'btnNovoAcesso', 'btnCancelarAcesso', 'btnSalvarAcesso'].forEach(id => { $(id).hidden = true; });
+}
 function abrirCarteira(c) {
   estado.aberta = c;
   $('abrirTitulo').textContent = rotuloCarteira(c).texto;
@@ -1145,12 +1442,9 @@ function abrirCarteira(c) {
   $('abrirAcesso').value = ''; $('abrirCripto').value = '';
   $('abrirAcesso').type = 'password'; $('abrirCripto').type = 'password';
   $('erroAbrir').hidden = true;
-  $('abrirChaves').hidden = false;
-  $('abrirPalavras').hidden = true;
-  $('btnDesbloquear').hidden = false;
-  $('btnRevelar').hidden = true;
-  $('btnExcluir').hidden = true;
-  dlgAbrir.showModal();
+  $('btnExcluir').textContent = t(ehCaderno(c.obj) ? 'excluirCaderno' : 'excluir');
+  mostrarPainelChaves();
+  if (!dlgAbrir.open) dlgAbrir.showModal();
   $('abrirAcesso').focus();
 }
 async function desbloquear() {
@@ -1160,6 +1454,11 @@ async function desbloquear() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> ' + t('verificando');
   try {
+    if (ehCaderno(estado.aberta.obj)) {
+      const { acessos, descricao, chave } = await decifrarCaderno(estado.aberta.obj, $('abrirAcesso').value, $('abrirCripto').value);
+      mostrarCadernoAberto(acessos, descricao, chave);
+      return;
+    }
     const { palavras, descricao } = await decifrarCarteira(estado.aberta.obj, $('abrirAcesso').value, $('abrirCripto').value);
     estado.palavrasAbertas = palavras;
     $('abrirAcesso').value = ''; $('abrirCripto').value = '';
@@ -1226,29 +1525,30 @@ $('btnExcluir').addEventListener('click', async () => {
   try {
     await excluirCarteira(c);
     dlgAbrir.close();
-    toast(t('excluida'));
+    toast(t(ehCaderno(c.obj) ? 'cadernoExcluido' : 'excluida'));
   } catch (e) {
     toast(t('erroExcluir', { erro: e.message || e }), true);
   }
 });
 
 // ---- auto-lock ----
+function desbloqueado() { return !!(estado.palavrasAbertas || estado.acessos); }
 function limparExibicao() {
   pararTrava();
   estado.palavrasAbertas = null;
+  estado.acessos = null; estado.chaveCaderno = null; estado.acessoEditando = null; estado.acessoExpandido = null;
   $('gradeAberta').innerHTML = '';
+  $('listaAcessos').innerHTML = '';
+  $('buscaAcessos').value = '';
+  limparFormAcesso();
   ocultarTodas();
   $('abrirAcesso').value = ''; $('abrirCripto').value = '';
 }
 function travarAgora(motivo) {
-  if (!estado.palavrasAbertas) return;
+  if (!desbloqueado()) return;
   limparExibicao();
   if (estado.aberta) $('abrirTitulo').textContent = rotuloCarteira(estado.aberta).texto;
-  $('abrirChaves').hidden = false;
-  $('abrirPalavras').hidden = true;
-  $('btnDesbloquear').hidden = false;
-  $('btnRevelar').hidden = true;
-  $('btnExcluir').hidden = true;
+  mostrarPainelChaves();
   if (dlgAbrir.open) toast(motivo);
 }
 function iniciarTrava() {
@@ -1257,15 +1557,255 @@ function iniciarTrava() {
   estado.timerTrava = setInterval(() => {
     const resta = Math.max(0, estado.fimTrava - Date.now());
     const s = Math.ceil(resta / 1000);
-    $('contagemTrava').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    const texto = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    document.querySelectorAll('.contagem-trava').forEach(el => { el.textContent = texto; });
     if (resta <= 0) travarAgora(t('travaTempo'));
   }, 250);
 }
-function reiniciarTrava() { if (estado.palavrasAbertas) estado.fimTrava = Date.now() + TRAVA_MS; }
+function reiniciarTrava() { if (desbloqueado()) estado.fimTrava = Date.now() + TRAVA_MS; }
 function pararTrava() { clearInterval(estado.timerTrava); estado.timerTrava = null; }
 ['mousemove', 'keydown', 'pointerdown', 'scroll'].forEach(ev => dlgAbrir.addEventListener(ev, reiniciarTrava, { passive: true }));
 document.addEventListener('visibilitychange', () => { if (document.hidden) travarAgora(t('travaFoco')); });
 dlgAbrir.addEventListener('close', () => { limparExibicao(); $('abrirTitulo').textContent = ''; estado.aberta = null; });
+// Esc while editing an entry goes back to the list instead of closing the dialog.
+dlgAbrir.addEventListener('cancel', (e) => {
+  if (!$('abrirFormAcesso').hidden) { e.preventDefault(); cancelarFormAcesso(); }
+});
+
+// =====================================================================
+//  Access book
+// =====================================================================
+const COPIA_LIMPA_MS = 20 * 1000;
+let timerCopia = null;
+
+function el(tag, classe, texto) {
+  const e = document.createElement(tag);
+  if (classe) e.className = classe;
+  if (texto != null) e.textContent = texto;
+  return e;
+}
+function mostrarCadernoAberto(acessos, descricao, chave) {
+  estado.acessos = acessos;
+  estado.chaveCaderno = chave;
+  estado.acessoExpandido = null;
+  $('abrirAcesso').value = ''; $('abrirCripto').value = '';
+  if (descricao) $('abrirTitulo').textContent = descricao;
+  $('abrirChaves').hidden = true;
+  $('btnDesbloquear').hidden = true;
+  $('buscaAcessos').value = '';
+  mostrarPainelCaderno('lista');
+  renderizarAcessos();
+  iniciarTrava();
+  $('buscaAcessos').focus();
+}
+function mostrarPainelCaderno(qual) {   // 'lista' | 'form'
+  const form = qual === 'form';
+  $('abrirAcessos').hidden = form;
+  $('abrirFormAcesso').hidden = !form;
+  $('btnNovoAcesso').hidden = form;
+  $('btnFecharAbrir').hidden = form;
+  $('btnExcluir').hidden = form || estado.modo !== 'pasta';
+  $('btnCancelarAcesso').hidden = !form;
+  $('btnSalvarAcesso').hidden = !form;
+}
+function ordenarAcessos(lista) {
+  return [...lista].sort((a, b) => a.servico.localeCompare(b.servico, idioma, { sensitivity: 'base' }) || a.usuario.localeCompare(b.usuario, idioma));
+}
+function filtrarAcessos(q) {
+  const n = q.trim().toLowerCase();
+  if (!n) return estado.acessos;
+  return estado.acessos.filter(a => [a.servico, a.endereco, a.usuario, a.notas, ...a.campos.map(c => c.nome)]
+    .some(v => v && v.toLowerCase().includes(n)));
+}
+function usosCodigo(codigo) { return estado.acessos.filter(a => a.codigoSenha === codigo).length; }
+function renderizarAcessos() {
+  if (!estado.acessos) return;
+  const lista = $('listaAcessos');
+  lista.innerHTML = '';
+  const q = $('buscaAcessos').value;
+  const visiveis = ordenarAcessos(filtrarAcessos(q));
+  $('abrirQtdAcessos').textContent = t('acessosQtd', { n: estado.acessos.length });
+  const vazio = $('vazioAcessos');
+  vazio.hidden = visiveis.length > 0;
+  vazio.textContent = estado.acessos.length ? t('nenhumResultado', { q: q.trim() }) : t('semAcessos');
+  for (const a of visiveis) lista.appendChild(montarAcesso(a));
+}
+function segredo(valor) {
+  const s = el('span', 'segredo', valor);
+  s.tabIndex = 0;
+  return s;
+}
+function botaoCopiar(valor) {
+  const b = el('button', 'btn pequeno', t('copiar'));
+  b.type = 'button';
+  b.addEventListener('click', (e) => { e.stopPropagation(); copiarSegredo(valor); });
+  return b;
+}
+function montarAcesso(a) {
+  const div = el('div', 'acesso' + (estado.acessoExpandido === a.id ? ' aberto' : ''));
+  const linha = el('div', 'linha');
+  linha.tabIndex = 0;
+  linha.appendChild(el('span', 'nome', a.servico));
+  if (a.endereco) linha.appendChild(el('span', 'end', a.endereco));
+  const badges = el('span', 'badges');
+  if (a.codigoSenha) {
+    const bd = el('span', 'badge codigo', t('codigoBadge', { c: a.codigoSenha }));
+    bd.title = t('codigoUsos', { c: a.codigoSenha, n: usosCodigo(a.codigoSenha) });
+    badges.appendChild(bd);
+  }
+  if (a.senha) badges.appendChild(el('span', 'badge', '🔑 ' + t('senhaBadge')));
+  linha.appendChild(badges);
+  if (a.usuario) linha.appendChild(el('span', 'usu', a.usuario));
+  const alternar = () => {
+    const aberto = div.classList.toggle('aberto');
+    estado.acessoExpandido = aberto ? a.id : null;
+    if (aberto) for (const outro of $('listaAcessos').querySelectorAll('.acesso.aberto')) { if (outro !== div) outro.classList.remove('aberto'); }
+  };
+  linha.addEventListener('click', alternar);
+  linha.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(); } });
+  div.appendChild(linha);
+
+  const det = el('div', 'detalhes');
+  const item = (rotulo, no) => { const i = el('div', 'item'); i.appendChild(el('b', null, rotulo)); i.appendChild(no); det.appendChild(i); };
+  if (a.usuario) { const v = el('span', 'valor', a.usuario); const w = el('span'); w.appendChild(v); w.appendChild(document.createTextNode(' ')); w.appendChild(botaoCopiar(a.usuario)); item(t('usuario'), w); }
+  if (a.codigoSenha) item(t('codigoSenha'), el('span', 'valor', t('codigoUsos', { c: a.codigoSenha, n: usosCodigo(a.codigoSenha) })));
+  if (a.senha) { const w = el('span'); w.appendChild(segredo(a.senha)); w.appendChild(document.createTextNode(' ')); w.appendChild(botaoCopiar(a.senha)); item(t('senhaGuardada'), w); }
+  for (const c of a.campos) {
+    const w = el('span');
+    if (c.oculto) { w.appendChild(segredo(c.valor)); w.appendChild(document.createTextNode(' ')); w.appendChild(botaoCopiar(c.valor)); }
+    else w.appendChild(el('span', 'valor', c.valor));
+    item(c.nome, w);
+  }
+  if (a.notas) item(t('notas'), el('span', 'valor', a.notas));
+  if (a.criadoEm || a.atualizadoEm) det.appendChild(el('div', 'datas', t('acessoDatas', { c: formatarData(a.criadoEm || a.atualizadoEm), u: formatarData(a.atualizadoEm || a.criadoEm) })));
+  const acoes = el('div', 'acoes');
+  const bEditar = el('button', 'btn pequeno', t('editar')); bEditar.type = 'button';
+  bEditar.addEventListener('click', () => abrirFormAcesso(a));
+  const bExcluir = el('button', 'btn pequeno perigo', t('excluirAcesso')); bExcluir.type = 'button';
+  bExcluir.addEventListener('click', () => excluirAcesso(a));
+  acoes.appendChild(bEditar); acoes.appendChild(bExcluir);
+  det.appendChild(acoes);
+  div.appendChild(det);
+  return div;
+}
+// Touch: a hidden value shows while the finger is on it (mouse and keyboard are handled by CSS).
+$('listaAcessos').addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'mouse') return;
+  const s = e.target.closest('.segredo');
+  if (s) { s.classList.add('revelada'); reiniciarTrava(); }
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+  $('listaAcessos').addEventListener(ev, () => $('listaAcessos').querySelectorAll('.revelada').forEach(s => s.classList.remove('revelada'))));
+async function copiarSegredo(valor) {
+  try {
+    await navigator.clipboard.writeText(valor);
+    toast(t('copiado', { s: COPIA_LIMPA_MS / 1000 }));
+    clearTimeout(timerCopia);
+    timerCopia = setTimeout(() => navigator.clipboard.writeText('').catch(() => {}), COPIA_LIMPA_MS);
+  } catch {
+    toast(t('copiarFalhou'), true);
+  }
+}
+$('buscaAcessos').addEventListener('input', renderizarAcessos);
+
+// ---- entry form ----
+function adicionarLinhaCampo(c = { nome: '', valor: '', oculto: false }) {
+  const row = el('div', 'campo-extra');
+  const eNome = el('div', 'entrada'), iNome = el('input'); iNome.className = 'ce-nome'; iNome.maxLength = 40; iNome.autocomplete = 'off'; iNome.placeholder = t('campoNome'); iNome.value = c.nome; eNome.appendChild(iNome);
+  const eValor = el('div', 'entrada'), iValor = el('input'); iValor.className = 'ce-valor'; iValor.maxLength = 500; iValor.autocomplete = 'off'; iValor.spellcheck = false; iValor.placeholder = t('campoValor'); iValor.value = c.valor; eValor.appendChild(iValor);
+  const lab = el('label'), chk = el('input'); chk.type = 'checkbox'; chk.className = 'ce-oculto'; chk.checked = !!c.oculto; lab.appendChild(chk); lab.appendChild(el('span', null, t('campoOculto')));
+  const rem = el('button', 'btn pequeno', '✕'); rem.type = 'button'; rem.title = t('removerCampo'); rem.addEventListener('click', () => row.remove());
+  row.appendChild(eNome); row.appendChild(eValor); row.appendChild(lab); row.appendChild(rem);
+  $('acCampos').appendChild(row);
+  return iNome;
+}
+function limparFormAcesso() {
+  ['acServico', 'acEndereco', 'acUsuario', 'acCodigo', 'acSenha', 'acNotas'].forEach(id => { $(id).value = ''; });
+  $('acSenha').type = 'password';
+  $('acCampos').innerHTML = '';
+  $('erroAcesso').hidden = true;
+}
+function abrirFormAcesso(a) {   // a = null → new entry
+  limparFormAcesso();
+  estado.acessoEditando = a ? a.id : null;
+  $('formAcessoTitulo').textContent = t(a ? 'editarAcesso' : 'novoAcesso');
+  if (a) {
+    $('acServico').value = a.servico; $('acEndereco').value = a.endereco; $('acUsuario').value = a.usuario;
+    $('acCodigo').value = a.codigoSenha; $('acSenha').value = a.senha; $('acNotas').value = a.notas;
+    a.campos.forEach(adicionarLinhaCampo);
+  }
+  mostrarPainelCaderno('form');
+  $('acServico').focus();
+}
+function lerFormAcesso() {
+  const campos = [...$('acCampos').querySelectorAll('.campo-extra')].map(r => ({
+    nome: r.querySelector('.ce-nome').value.trim(), valor: r.querySelector('.ce-valor').value, oculto: r.querySelector('.ce-oculto').checked,
+  })).filter(c => c.nome || c.valor);
+  return {
+    servico: $('acServico').value.trim(), endereco: $('acEndereco').value.trim(), usuario: $('acUsuario').value.trim(),
+    codigoSenha: $('acCodigo').value.trim(), senha: $('acSenha').value, notas: $('acNotas').value.trim(), campos,
+  };
+}
+async function salvarCaderno(lista) {
+  const item = estado.aberta;
+  const novo = await recifrarCaderno(item.obj, estado.chaveCaderno, lista);
+  await regravarArquivo(item, novo);
+  estado.acessos = lista;
+}
+async function salvarAcesso() {
+  const erro = $('erroAcesso');
+  erro.hidden = true;
+  const campos = lerFormAcesso();
+  if (!campos.servico) { erro.textContent = t('servicoObrigatorio'); erro.hidden = false; $('acServico').focus(); return; }
+  const btn = $('btnSalvarAcesso');
+  btn.disabled = true;
+  try {
+    const agora = new Date().toISOString();
+    let lista, id;
+    if (estado.acessoEditando) {
+      id = estado.acessoEditando;
+      lista = estado.acessos.map(x => x.id === id ? { ...x, ...campos, atualizadoEm: agora } : x);   // unknown fields survive
+    } else {
+      id = crypto.randomUUID();
+      lista = [...estado.acessos, { id, ...campos, criadoEm: agora, atualizadoEm: agora }];
+    }
+    await salvarCaderno(lista);
+    estado.acessoEditando = null;
+    estado.acessoExpandido = id;
+    limparFormAcesso();
+    mostrarPainelCaderno('lista');
+    renderizarAcessos();
+    toast(t(estado.modo === 'pasta' ? 'acessoSalvo' : 'acessoSalvoDownload', { nome: estado.aberta.nome }));
+  } catch (e) {
+    erro.textContent = t('erroSalvarCaderno', { erro: e.message || e });
+    erro.hidden = false;
+  } finally {
+    btn.disabled = false;
+  }
+}
+async function excluirAcesso(a) {
+  if (!confirm(t('excluirAcessoConfirma', { s: a.servico }))) return;
+  try {
+    await salvarCaderno(estado.acessos.filter(x => x.id !== a.id));
+    renderizarAcessos();
+    toast(t('acessoExcluido'));
+  } catch (e) {
+    toast(t('erroSalvarCaderno', { erro: e.message || e }), true);
+  }
+}
+function cancelarFormAcesso() {
+  limparFormAcesso();
+  estado.acessoEditando = null;
+  mostrarPainelCaderno('lista');
+  renderizarAcessos();
+}
+$('btnNovoAcesso').addEventListener('click', () => abrirFormAcesso(null));
+$('btnCancelarAcesso').addEventListener('click', cancelarFormAcesso);
+$('btnSalvarAcesso').addEventListener('click', salvarAcesso);
+$('btnAddCampo').addEventListener('click', () => adicionarLinhaCampo().focus());
+$('abrirFormAcesso').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.preventDefault(); salvarAcesso(); }
+});
 
 // =====================================================================
 //  Start-up
@@ -1284,6 +1824,10 @@ async function autoteste() {
     let pegou = false;
     try { await decifrarCarteira(obj, 'errada123', 'x9y8z7w6v5u4'); } catch (e) { pegou = e.codigo === 'ACESSO'; }
     if (!pegou) throw new Error('verifier');
+    const livro = await cifrarCaderno({ descricao: 'b', acessos: [{ servico: 'S', codigoSenha: '4' }], acesso: 'a1b2c3d4', cripto: 'x9y8z7w6v5u4' }, 1000);
+    const re = await recifrarCaderno(livro.arquivo, livro.chave, [{ servico: 'S', codigoSenha: '5' }]);
+    const lv = await decifrarCaderno(re, 'a1b2c3d4', 'x9y8z7w6v5u4');
+    if (lv.acessos.length !== 1 || lv.acessos[0].codigoSenha !== '5') throw new Error('book round trip');
     el.textContent = t('autotesteOk');
   } catch (e) {
     el.textContent = t('autotesteFalhou', { erro: e.message });

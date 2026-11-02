@@ -33,6 +33,22 @@ cabeça: duas chaves.
 Quem achar o pen drive com o HTML vê um programa vazio. Quem achar os arquivos vê dados
 aleatórios. Quem achar os dois ainda precisa das suas duas chaves.
 
+## Cadernos de acessos: as senhas de todo o resto
+
+Desde a versão 1.1 a mesma pasta pode guardar **cadernos de acessos**: um arquivo cifrado com
+a sua lista de logins (streaming, e-mail, banco, fóruns), cada um com o serviço, o usuário, um
+**código da senha** e anotações. O código é a forma recomendada de usar o caderno: mantenha as
+senhas em si num papel, numeradas, e anote no caderno só o número. Mesmo decifrado, o arquivo
+revela quais contas existem, nunca as senhas delas. Para contas que não merecem o papel, você
+pode guardar a senha no próprio acesso; ela aparece borrada, revela-se ao passar o mouse, e
+"Copiar" limpa a área de transferência depois de 20 segundos.
+
+Um caderno abre como uma carteira, com as suas duas chaves, e mostra uma lista com busca.
+Incluir ou editar um acesso recifra o arquivo inteiro com um nonce novo; a versão anterior
+fica guardada como `a01.json.bak`. O caderno trava sozinho depois de dois minutos sem atividade
+ou quando a aba perde o foco, exatamente como as palavras. O formato do arquivo está no
+[SPEC.md](SPEC.md#8-access-book--twinlock-acessos1).
+
 ## Começando
 
 1. Baixe o `twinlock.html` na [última release](https://github.com/wptprg/twinlock/releases/latest).
@@ -83,7 +99,7 @@ O `gpg --verify` precisa dizer "Good signature" e mostrar a impressão digital a
 impressão digital diferente significa outra chave, não outra versão: **não use o arquivo**.
 
 O Twinlock é, de propósito, um único arquivo legível, sem minificação, sem etapa de build e
-sem dependências. Qualquer pessoa pode abri-lo num editor de texto e auditar as cerca de 600
+sem dependências. Qualquer pessoa pode abri-lo num editor de texto e auditar as cerca de 1 900
 linhas de código. A própria página mostra a versão e o endereço oficial no rodapé.
 
 ## Do que o Twinlock protege, e do que não protege
@@ -109,7 +125,8 @@ linhas de código. A própria página mostra a versão e o endereço oficial no 
 
 O formato do arquivo está totalmente documentado em [SPEC.md](SPEC.md) e usa só algoritmos
 padrão (PBKDF2-HMAC-SHA256 e AES-256-GCM). Se este projeto, o navegador ou o arquivo HTML
-desaparecerem um dia, você ainda recupera as palavras com algumas linhas de código:
+desaparecerem um dia, você ainda recupera as palavras, ou os acessos de um caderno, com
+algumas linhas de código:
 
 * [`tools/recover.mjs`](tools/recover.mjs): Node.js, sem dependências.
 * [`tools/recover.py`](tools/recover.py): Python 3 com o pacote `cryptography`.
@@ -118,7 +135,12 @@ desaparecerem um dia, você ainda recupera as palavras com algumas linhas de có
 node tools/recover.mjs c01.json
 ```
 
-[`tools/sample-wallet.json`](tools/sample-wallet.json) é um arquivo público de teste; as chaves estão no SPEC.md.
+```bash
+node tools/recover.mjs a01.json
+```
+
+[`tools/sample-wallet.json`](tools/sample-wallet.json) e [`tools/sample-book.json`](tools/sample-book.json)
+são arquivos públicos de teste; as chaves estão no SPEC.md.
 
 ## Idiomas
 
@@ -139,8 +161,15 @@ Mais seguro que papel, desde que suas chaves sejam fortes e você marque "Cifrar
 descrição". Leia acima a seção sobre do que o Twinlock não protege.
 
 **Posso guardar outra coisa além de uma frase BIP39?**
-Não na versão 1. O Twinlock valida as palavras contra a lista oficial BIP39 em inglês,
-inclusive o checksum, porque erro de digitação em frase de recuperação é o pior erro possível.
+Carteiras guardam só frases BIP39: o Twinlock valida as palavras contra a lista oficial em
+inglês, inclusive o checksum, porque erro de digitação em frase de recuperação é o pior erro
+possível. Para todo o resto (logins de sites, PINs, anotações) crie um caderno de acessos,
+descrito acima.
+
+**O caderno deve usar as mesmas chaves das carteiras?**
+Pode, mas você vai digitar as chaves do caderno com muito mais frequência que as de uma
+carteira, e o que é digitado com frequência fica mais exposto a um teclado ou tela
+comprometidos. Chaves diferentes para o caderno mantêm um vazamento ali longe das carteiras.
 
 **Por que duas chaves em vez de uma senha forte?**
 Porque as pessoas reutilizam senhas e as anotam. Duas chaves guardadas em lugares diferentes

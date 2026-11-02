@@ -32,6 +32,21 @@ in your head: two keys.
 Someone who finds the USB stick with the HTML sees an empty program. Someone who finds the
 files sees random data. Someone who finds both still needs your two keys.
 
+## Access books: the passwords for everything else
+
+Since version 1.1 the same folder can hold **access books**: one encrypted file with your
+list of logins (streaming, e-mail, bank, forums), each with the service, the user name, a
+**password code** and notes. The code is Twinlock's recommended way of using a book: keep the
+passwords themselves on a piece of paper, numbered, and write only the number in the book.
+Even decrypted, the file then reveals which accounts exist, never their passwords. For
+accounts that do not deserve the paper you can store the password in the entry instead; it is
+shown blurred, revealed on hover, and "Copy" clears the clipboard after 20 seconds.
+
+A book opens like a wallet, with its two keys, and shows a searchable list. Adding or editing
+an entry re-encrypts the whole file with a fresh nonce; the previous version is kept as
+`a01.json.bak`. The book locks itself after two minutes without activity or when the tab loses
+focus, exactly like the words. The file format is in [SPEC.md](SPEC.md#8-access-book--twinlock-acessos1).
+
 ## Quick start
 
 1. Download `twinlock.html` from the [latest release](https://github.com/wptprg/twinlock/releases/latest).
@@ -82,7 +97,7 @@ sha256sum -c SHA256SUMS          # macOS: shasum -a 256 -c SHA256SUMS
 fingerprint means a different key, not a different version: **do not use the file**.
 
 Twinlock is deliberately a single, readable, unminified file with no build step and no
-dependencies. Anyone can open it in a text editor and audit the roughly 600 lines of code.
+dependencies. Anyone can open it in a text editor and audit the roughly 1 900 lines of code.
 The page itself shows its version and the official source address in the footer.
 
 ## What Twinlock protects against, and what it does not
@@ -107,7 +122,8 @@ The page itself shows its version and the official source address in the footer.
 
 Twinlock's file format is fully documented in [SPEC.md](SPEC.md) and uses only standard
 algorithms (PBKDF2-HMAC-SHA256 and AES-256-GCM). If this project, the browser or the HTML
-file ever disappear, you can still recover your words with a few lines of code:
+file ever disappear, you can still recover your words, or the entries of an access book, with
+a few lines of code:
 
 * [`tools/recover.mjs`](tools/recover.mjs): Node.js, no dependencies.
 * [`tools/recover.py`](tools/recover.py): Python 3 with the `cryptography` package.
@@ -116,7 +132,12 @@ file ever disappear, you can still recover your words with a few lines of code:
 node tools/recover.mjs c01.json
 ```
 
-[`tools/sample-wallet.json`](tools/sample-wallet.json) is a public test file; its keys are in SPEC.md.
+```bash
+node tools/recover.mjs a01.json
+```
+
+[`tools/sample-wallet.json`](tools/sample-wallet.json) and [`tools/sample-book.json`](tools/sample-book.json)
+are public test files; their keys are in SPEC.md.
 
 ## Languages
 
@@ -137,8 +158,14 @@ Safer than paper, as long as your keys are strong and you tick "Also encrypt the
 Read the section above about what Twinlock does not protect against.
 
 **Can I store something other than a BIP39 phrase?**
-Not in version 1. Twinlock validates the words against the official BIP39 English list,
-including the checksum, because a typo in a recovery phrase is the worst kind of error.
+Wallets hold only BIP39 phrases: Twinlock validates the words against the official English
+list, including the checksum, because a typo in a recovery phrase is the worst kind of error.
+For everything else (site logins, PINs, notes) create an access book, described above.
+
+**Should a book use the same keys as my wallets?**
+It can, but you will type the book's keys far more often than a wallet's, and what is typed
+often is more exposed to a tampered keyboard or screen. Different keys for the book keep a
+leak there away from your wallets.
 
 **Why two keys instead of one strong password?**
 Because people reuse passwords and write them down. Two keys that you keep in different

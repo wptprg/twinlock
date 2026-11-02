@@ -1,0 +1,21 @@
+{
+  "formato": "twinlock-acessos/1",
+  "versao": "1.1.0",
+  "id": "118ce2f4-773f-45a5-a62f-d361390ff848",
+  "descricao": "",
+  "criadoEm": "2026-11-02T12:00:00.000Z",
+  "kdf": {
+    "algoritmo": "PBKDF2-SHA256",
+    "iteracoes": 2000
+  },
+  "saltVerificador": "j5WH19rstihPG/A7umTCww==",
+  "verificador": "Vk6EWiHPS4Im2IurjUlIVYDsciUbjRVWOpdYi8gpi0g=",
+  "saltChave": "xa0y8dS9T1+clj2VlKY/PA==",
+  "iv": "c5/CzXSvY/mm/jYd",
+  "dados": "h6qh7+XenAXS5O3LEvDvqeWFS0zSgCjd4nhTskjw4vNs/EhkxI65/F+n+IDvB0nkjWcCaMjtOWFZGCPeJ6KBCjKi9ZJzgko60NJ2gBjhw7gJDLxfxPjxB5VgS8JF2Qxkbgdy25bjqFuOqe/N2J6rYNtQHFArxSukv4O4hjNicGt4V9x0cYNu6c/KTgL1ttpnRG54exwAC+6QV6/vnuZE9ezq6dkZr1yx8D45p2QjnS3To2RTfpBF+7tig9akvRtn2+X/evfQQ7xIjR34u2hjf0m/ChmAT1z4bXfDkSsrsCaZlDMcjOR+thLYYK/sR7h36Hv6IW37+opMi/fnSkZ0F7mgczdB9m4qqKCBxdlrxDAbigTwACRlB5ILJu7IQRYuaeivonUBBpXFh7moofhcSsR5y6U6nMWZmUgwtitW6e77WGhO5N4xiU62vd5n2NEunjJw2qxpEJHfZMhcyJSbFIOJpHkYdPzw91PA2QMjTCQJkAzxd6kNs3ETr/rh/YBAWfeVJ/NSJUvcQLkR9SkB7qVkJz/g0PafY0Gc1pqFSpExxqClk+dOrhsdlZtKuh05x0PGl9gIRHFLux5XLaQfOu2v1LeCGpt3Ls4U8cdaKERLJqPd1V6uD2pgDHIXA19t/4kTgE7Ex5vOZOXYF7eEqZPYkQODyEZ8IE8t30RdUF7s4IBx3w5QSaaM7HGgHNTltCfwSuCKDRrIZEjZjG1TvSryUcG1exIRyr3VhvG52Q9jtx9XrFISV7FPeCe9OkpcT9KEdHzd35IJmR72WPrhbWdXRs51ppi8zkPjep5feyacGKK3cDH4YA5Qo/Yd",
+  "descricaoCifrada": {
+    "iv": "4xL8w2ybesFYpied",
+    "dados": "LDgJZ3aVe96Iscs1fr6/xa/xH6UoelJo3J/w"
+  },
+  "atualizadoEm": "2026-11-02T12:00:00.000Z"
+}

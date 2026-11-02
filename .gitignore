@@ -1,5 +1,7 @@
-# never commit wallet files, even test ones created by hand
+# never commit wallet or access book files, even test ones created by hand
 c[0-9][0-9].json
+a[0-9][0-9].json
+*.json.bak
 *.local.json
 
 # OS noise

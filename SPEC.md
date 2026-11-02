@@ -1,8 +1,9 @@
 # Twinlock file format — version `twinlock/1`
 
-This document is the complete specification of a Twinlock wallet file. It exists so that
-anyone can recover their words **without Twinlock**, using only standard cryptographic
-libraries, as long as they know the two keys. Nothing in this document is secret.
+This document is the complete specification of Twinlock files: wallet files (§1 to §7) and,
+since Twinlock 1.1, access books (§8). It exists so that anyone can recover their words
+**without Twinlock**, using only standard cryptographic libraries, as long as they know the
+two keys. Nothing in this document is secret.
 
 ## 1. Overview
 
@@ -141,3 +142,87 @@ Any conforming implementation must recover exactly those words and that label fr
 
 A breaking change to any derivation creates a new `formato` value (`twinlock/2`…).
 Readers must refuse unknown values rather than guess.
+
+## 8. Access book — `twinlock-acessos/1`
+
+Since Twinlock 1.1 the same folder can also hold **access books**: one file holding a whole
+list of logins (service, user name, which password to use, notes). A book is a regular
+Twinlock container with a different `formato` and a different payload. **Every derivation in
+§3 is unchanged**; only the plaintext and one AAD differ.
+
+### 8.1 File layout
+
+Identical to §2, with these differences:
+
+| Field | Meaning |
+|---|---|
+| `formato` | `twinlock-acessos/1`. A reader for wallets must refuse it, and vice versa. |
+| `atualizadoEm` | ISO 8601 timestamp of the last save. Informational. |
+| `dados` | AES-GCM output of the **UTF-8 JSON document** described in §8.2, with AAD = `id || \0 || "acessos"`. |
+
+`descricao`, `descricaoCifrada`, `kdf`, the salts, the verifier and `iv` keep the meaning and
+the derivations of §2 and §3. `criadoEm` is the creation date of the book, not of the entries.
+
+### 8.2 Payload
+
+```json
+{
+  "acessos": [
+    {
+      "id": "7d1c4c7e-4c0a-4fd2-9a63-2e4d1d6b3f10",
+      "servico": "Netflix",
+      "endereco": "netflix.com",
+      "usuario": "someone@example.com",
+      "codigoSenha": "4",
+      "senha": "",
+      "notas": "Family plan, renews in March.",
+      "campos": [ { "nome": "PIN", "valor": "1234", "oculto": true } ],
+      "criadoEm": "2026-11-02T10:00:00.000Z",
+      "atualizadoEm": "2026-11-02T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `acessos` | yes | Array of entries, in no particular order. |
+| `id` | yes | Random UUID v4 of the entry. |
+| `servico` | yes | Name of the service or site. The only mandatory text. |
+| `endereco` | no | Address of the site. |
+| `usuario` | no | Login, e-mail or user name. |
+| `codigoSenha` | no | A short reference to a password kept **outside** the file, for example the number of a line on a piece of paper. Twinlock's recommended way of using a book: the file, even decrypted, does not contain the password. |
+| `senha` | no | The password itself, for entries whose owner chose to store it. Empty when not stored. |
+| `notas` | no | Free text, may contain line breaks. |
+| `campos` | no | Extra name/value pairs. `oculto: true` marks a value to be shown blurred, like a password. |
+| `criadoEm`, `atualizadoEm` | no | ISO 8601 timestamps of the entry. |
+
+Unknown fields must be preserved by writers and ignored by readers.
+
+### 8.3 Decryption
+
+```
+dados = AES-256-GCM-Encrypt( key = K, iv = iv, aad = UTF8(id || \0 || "acessos"), UTF8(json) )
+```
+
+The procedure of §4 applies, with the AAD above in step 3 and `JSON.parse` in step 4. The AAD
+suffix guarantees that a wallet ciphertext relabelled as a book, or the reverse, fails
+authentication instead of being misread.
+
+### 8.4 Saving changes
+
+A book is rewritten on every change. Twinlock keeps the derived key `K` in memory, as a
+non-extractable WebCrypto key, from the moment a book is unlocked until it locks again, so a
+save does not ask for the keys or run PBKDF2 again. Each save uses a **fresh random `iv`**,
+keeps `id`, the salts, the verifier and `descricaoCifrada` unchanged (they are all bound to the
+same `K` and `id`), and updates `atualizadoEm`. Before overwriting, the previous content is
+copied to a file with the same name plus `.bak` (for example `a01.json.bak`), which readers
+must ignore because it does not end in `.json`.
+
+### 8.5 Test vector
+
+[`tools/sample-book.json`](tools/sample-book.json) is a book created with the same keys as the
+wallet vector (§5): access key `test-access-key`, encryption key `test-encryption-key-1`,
+2 000 iterations, encrypted label `Sample book`. It holds two entries: `Netflix`
+(`someone@example.com`, `codigoSenha` `4`, no stored password) and `Example forum`
+(`someone`, stored password `correct horse battery staple`, one hidden extra field `PIN` = `1234`).

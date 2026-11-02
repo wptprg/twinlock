@@ -15,8 +15,8 @@ const ini = src.indexOf('// ==== LOGICA ===='), fim = src.indexOf('// ==== FIM L
 if (ini < 0 || fim < 0) throw new Error('LOGICA markers not found in twinlock.html');
 const ctx = {};
 new Function('ctx', src.slice(ini, fim) + `
-Object.assign(ctx, { BIP39, cifrarCarteira, decifrarCarteira, validarFrase, forcaSenha, FORMATO, ITERACOES, VERSAO });`)(ctx);
-const { BIP39, cifrarCarteira, decifrarCarteira, validarFrase, forcaSenha, FORMATO, ITERACOES, VERSAO } = ctx;
+Object.assign(ctx, { BIP39, cifrarCarteira, decifrarCarteira, cifrarCaderno, decifrarCaderno, recifrarCaderno, validarFrase, forcaSenha, FORMATO, FORMATO_ACESSOS, ITERACOES, VERSAO });`)(ctx);
+const { BIP39, cifrarCarteira, decifrarCarteira, cifrarCaderno, decifrarCaderno, recifrarCaderno, validarFrase, forcaSenha, FORMATO, FORMATO_ACESSOS, ITERACOES, VERSAO } = ctx;
 
 const HASH_LISTA_OFICIAL = '2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda'; // sha256 of bip-0039/english.txt
 
@@ -89,6 +89,44 @@ const esperaErro = async (fn, codigo, nome) => { let e; try { await fn(); } catc
 
   // --- strength meter
   ok(forcaSenha('abc') === 0 && forcaSenha('abcdefghij') <= 1 && forcaSenha('Abcdef12!xyzQW') >= 3 && forcaSenha('Abcdef12!xyzQWERTY') === 4, 'strength meter ordering');
+
+  // --- access book (SPEC.md §8)
+  const entradas = [
+    { id: 'e1', servico: 'Netflix', endereco: 'netflix.com', usuario: 'x@x.com', codigoSenha: '4', notas: 'linha 1\nlinha 2', extra: 'kept' },
+    { id: 'e2', servico: 'Forum', usuario: 'someone', senha: 'correct horse', campos: [{ nome: 'PIN', valor: '1234', oculto: true }] },
+  ];
+  const { arquivo: livro, chave } = await cifrarCaderno({ descricao: 'Contas', cifrarDescricao: true, acessos: entradas, acesso: 'minhaChave1', cripto: 'cripto2024segura' }, 2000);
+  const sL = JSON.stringify(livro);
+  ok(livro.formato === FORMATO_ACESSOS && livro.descricao === '' && livro.descricaoCifrada, 'book: format twinlock-acessos/1, encrypted label');
+  ok(!sL.includes('Netflix') && !sL.includes('x@x.com') && !sL.includes('correct horse') && !sL.includes('1234') && !sL.includes('Contas'), 'book: nothing in clear text');
+  const vL2 = await decifrarCaderno(livro, 'minhaChave1', 'cripto2024segura');
+  ok(vL2.descricao === 'Contas' && vL2.acessos.length === 2 && vL2.acessos[0].notas === 'linha 1\nlinha 2' && vL2.acessos[1].senha === 'correct horse', 'book: round trip');
+  ok(vL2.acessos[0].extra === 'kept' && vL2.acessos[0].senha === '' && vL2.acessos[0].campos.length === 0 && vL2.acessos[1].campos[0].oculto === true, 'book: unknown fields kept, missing fields normalised');
+  await esperaErro(() => decifrarCaderno(livro, 'minhaChave2', 'cripto2024segura'), 'ACESSO', 'book: wrong access key → ACESSO');
+  await esperaErro(() => decifrarCaderno(livro, 'minhaChave1', 'cripto2024errada'), 'CRIPTO', 'book: wrong encryption key → CRIPTO');
+  await esperaErro(() => decifrarCaderno({ ...livro, dados: adulterar(livro.dados) }, 'minhaChave1', 'cripto2024segura'), 'CRIPTO', 'book: tampered → rejected');
+  await esperaErro(() => decifrarCarteira(livro, 'minhaChave1', 'cripto2024segura'), 'FORMATO', 'book: wallet reader refuses a book');
+  await esperaErro(() => decifrarCaderno({ ...objC, formato: FORMATO_ACESSOS }, 'minhaChave1', 'cripto2024segura'), 'CRIPTO', 'book: a relabelled wallet fails authentication (AAD)');
+  await esperaErro(() => decifrarCarteira({ ...livro, formato: FORMATO }, 'minhaChave1', 'cripto2024segura'), 'CRIPTO', 'book: a relabelled book fails authentication (AAD)');
+  // re-encryption with the key kept in memory
+  const re = await recifrarCaderno(livro, chave, [...entradas, { id: 'e3', servico: 'Bank', codigoSenha: '7' }]);
+  ok(re.iv !== livro.iv && re.dados !== livro.dados && re.id === livro.id && re.saltChave === livro.saltChave && re.verificador === livro.verificador && re.atualizadoEm, 'book: re-encrypt keeps id/salts/verifier, fresh IV, sets atualizadoEm');
+  const vRe = await decifrarCaderno(re, 'minhaChave1', 'cripto2024segura');
+  ok(vRe.acessos.length === 3 && vRe.acessos[2].servico === 'Bank' && vRe.descricao === 'Contas', 'book: re-encrypted file decrypts with the same keys, label intact');
+  const vRe2 = await decifrarCaderno(re, 'minhaChave1', 'cripto2024segura');
+  const re2 = await recifrarCaderno(re, vRe2.chave, []);
+  ok((await decifrarCaderno(re2, 'minhaChave1', 'cripto2024segura')).acessos.length === 0, 'book: key returned by decifrarCaderno re-encrypts too');
+  await esperaErro(() => decifrarCaderno({ ...re, dados: livro.dados }, 'minhaChave1', 'cripto2024segura'), 'CRIPTO', 'book: old ciphertext under a new IV → rejected');
+  const vazio = await cifrarCaderno({ descricao: 'v', acessos: [], acesso: 'minhaChave1', cripto: 'cripto2024segura' }, 2000);
+  ok((await decifrarCaderno(vazio.arquivo, 'minhaChave1', 'cripto2024segura')).acessos.length === 0, 'book: empty book round trip');
+
+  // --- public book vector (SPEC.md §8.5)
+  const vetorL = JSON.parse(fs.readFileSync(path.join(raiz, 'tools', 'sample-book.json'), 'utf8'));
+  const vvL = await decifrarCaderno(vetorL, 'test-access-key', 'test-encryption-key-1');
+  const nf = vvL.acessos.find(a => a.servico === 'Netflix'), fo = vvL.acessos.find(a => a.servico === 'Example forum');
+  ok(vvL.descricao === 'Sample book' && vvL.acessos.length === 2 && nf && nf.usuario === 'someone@example.com' && nf.codigoSenha === '4' && nf.senha === ''
+    && fo && fo.usuario === 'someone' && fo.senha === 'correct horse battery staple' && fo.campos.length === 1 && fo.campos[0].nome === 'PIN' && fo.campos[0].valor === '1234' && fo.campos[0].oculto,
+    'tools/sample-book.json decrypts to the documented vector');
 
   console.log(falhas ? `\n${falhas} FAILURE(S)` : '\nAll tests passed.');
   process.exit(falhas ? 1 : 0);
