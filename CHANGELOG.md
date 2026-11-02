@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — unreleased
+## 1.1.0 — 2026-11-02
 
 * **Access books**: a second kind of file, `twinlock-acessos/1`, holding a whole list of
   logins (service, address, user, password code, optional stored password, notes, extra
