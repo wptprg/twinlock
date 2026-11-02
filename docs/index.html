@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-HdOIr7TzEbFOnpIzfPsk+3gWjpDpbsF4m8JMfkVRd/c='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="Twinlock: your crypto wallet recovery phrase, encrypted. One HTML file, two keys, no internet. Free and open source. Store 12, 18 or 24 BIP39 seed words safely.">
+<meta name="description" content="Twinlock: your crypto wallet recovery phrase, encrypted. One HTML file, two keys, no internet. Free and open source. Store 12, 18 or 24 BIP39 seed words safely, plus an encrypted list of your other logins.">
 <title>Twinlock — your recovery phrase, encrypted</title>
 <link rel="canonical" href="https://wptprg.github.io/twinlock/">
 <link rel="alternate" hreflang="x-default" href="https://wptprg.github.io/twinlock/">
@@ -15,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Twinlock">
 <meta property="og:title" content="Twinlock — your recovery phrase, encrypted">
-<meta property="og:description" content="One HTML file, two keys, no internet. Store the 12, 18 or 24 words of your crypto wallet anywhere, encrypted. Free and open source.">
+<meta property="og:description" content="One HTML file, two keys, no internet. Store the 12, 18 or 24 words of your crypto wallet anywhere, encrypted, plus an encrypted list of your other logins. Free and open source.">
 <meta property="og:url" content="https://wptprg.github.io/twinlock/">
 <meta property="og:image" content="https://wptprg.github.io/twinlock/img/cards-en.png">
 <meta property="og:image:width" content="1280">
@@ -31,7 +31,7 @@
  "applicationCategory": "SecurityApplication",
  "operatingSystem": "Any (web browser, offline)",
  "softwareVersion": "1.1.0",
- "description": "Offline, single-file vault for crypto wallet recovery phrases (12, 18 or 24 BIP39 words). Two keys, AES-256-GCM, no internet, free and open source.",
+ "description": "Offline, single-file vault for crypto wallet recovery phrases (12, 18 or 24 BIP39 words) and for an encrypted list of your other logins. Two keys, AES-256-GCM, no internet, free and open source.",
  "url": "https://wptprg.github.io/twinlock/",
  "downloadUrl": "https://github.com/wptprg/twinlock/releases/latest",
  "codeRepository": "https://github.com/wptprg/twinlock",
@@ -63,6 +63,7 @@
     <a class="logo" href="#">🔐 Twinlock</a>
     <div class="links">
       <a href="#como" data-i18n="navComo"></a>
+      <a href="#acessos" data-i18n="navAcessos"></a>
       <a href="#seguranca" data-i18n="navSeguranca"></a>
       <a href="#baixar" data-i18n="navBaixar"></a>
       <a href="#faq" data-i18n="navFaq"></a>
@@ -131,7 +132,23 @@
   </div>
 </section>
 
-<section id="seguranca">
+<section id="acessos">
+  <div class="wrap">
+    <h2 data-i18n="acTitulo"></h2>
+    <p class="lead" data-i18n="acLead"></p>
+    <div class="passo">
+      <div class="texto"><h3 data-i18n="acSubT"></h3><p data-i18n="acSubP"></p></div>
+      <div class="moldura"><div class="barra"><i></i><i></i><i></i></div><img data-shot="book" alt="An access book, unlocked: searchable list of logins" width="1280" height="820"></div>
+    </div>
+    <div class="cartoes" style="margin-top:28px;">
+      <div class="cartao"><div class="ico">📝</div><h3 data-i18n="ac1T"></h3><p data-i18n="ac1P"></p></div>
+      <div class="cartao"><div class="ico">🫥</div><h3 data-i18n="ac2T"></h3><p data-i18n="ac2P"></p></div>
+      <div class="cartao"><div class="ico">⏱️</div><h3 data-i18n="ac3T"></h3><p data-i18n="ac3P"></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="seguranca" class="alt">
   <div class="wrap">
     <h2 data-i18n="segTitulo"></h2>
     <p class="lead" data-i18n="segLead"></p>
@@ -150,7 +167,7 @@
   </div>
 </section>
 
-<section id="baixar" class="alt">
+<section id="baixar">
   <div class="wrap">
     <h2 data-i18n="verTitulo"></h2>
     <p class="lead" data-i18n="verLead"></p>
@@ -177,7 +194,7 @@ gpg --verify SHA256SUMS.asc SHA256SUMS</pre>
   </div>
 </section>
 
-<section id="recuperar">
+<section id="recuperar" class="alt">
   <div class="wrap">
     <h2 data-i18n="recTitulo"></h2>
     <p class="lead" data-i18n="recLead"></p>
@@ -188,7 +205,7 @@ gpg --verify SHA256SUMS.asc SHA256SUMS</pre>
   </div>
 </section>
 
-<section id="faq" class="alt">
+<section id="faq">
   <div class="wrap">
     <h2 data-i18n="faqTitulo"></h2>
     <details><summary data-i18n="q1"></summary><p data-i18n="a1"></p></details>
@@ -200,7 +217,7 @@ gpg --verify SHA256SUMS.asc SHA256SUMS</pre>
   </div>
 </section>
 
-<section id="apoiar">
+<section id="apoiar" class="alt">
   <div class="wrap">
     <h2 data-i18n="apoioTitulo"></h2>
     <p class="lead" data-i18n="apoioLead"></p>
